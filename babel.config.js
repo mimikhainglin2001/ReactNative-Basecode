@@ -3,12 +3,17 @@ module.exports = function(api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      ['babel-plugin-transform-typescript-metadata', {
-        "spec": "decorators"
-      }],
+      ['babel-plugin-transform-typescript-metadata', { "spec": "decorators" }],
       ['@babel/plugin-proposal-decorators', { "version": "legacy" }],
-      '@babel/plugin-transform-private-methods',
-      '@babel/plugin-transform-private-property-in-object',
+    ],
+    overrides: [
+      {
+        include: [/node_modules[\\/]react-native[\\/]/],
+        plugins: [
+          ['@babel/plugin-transform-private-methods', { "loose": true }],
+          ['@babel/plugin-transform-private-property-in-object', { "loose": true }],
+        ],
+      },
     ],
   };
 };
