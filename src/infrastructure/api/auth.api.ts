@@ -21,4 +21,10 @@ export class AuthApi {
 
     return response.data;
   }
+
+  refreshToken(refreshToken: string) {
+    return apiClient.post("/refresh-token", {
+      refreshToken,
+    });
+  }
 }
