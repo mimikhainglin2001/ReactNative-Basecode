@@ -1,5 +1,15 @@
-import LoginScreen from "./presentation/screens/LoginScreen";
+import "reflect-metadata";
+
+import React from "react";
+
+import { NavigationContainer } from "@react-navigation/native";
+
+import RootNavigator from "./presentation/navigation/RootNavigator";
 
 export default function App() {
-  return <LoginScreen />;
+  return (
+    <NavigationContainer>
+      <RootNavigator />
+    </NavigationContainer>
+  );
 }
