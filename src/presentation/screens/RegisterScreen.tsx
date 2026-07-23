@@ -1,22 +1,38 @@
-import React, { useState } from "react";
-import { View, TextInput, Button, StyleSheet, Alert } from "react-native";
+import React, { useState, useMemo } from "react";
+
+import { View, TextInput, StyleSheet } from "react-native";
 
 import { RegisterViewModel } from "../viewmodels/RegisterViewModel";
 
+import AppButton from "../components/Button/AppButton";
+import AppMessage from "../components/Error/AppMessage";
+
 export default function RegisterScreen() {
-  const vm = new RegisterViewModel();
+  const vm = useMemo(() => new RegisterViewModel(), []);
 
   const [name, setName] = useState("");
+
   const [email, setEmail] = useState("");
+
   const [password, setPassword] = useState("");
+
+  const [message, setMessage] = useState("");
+
+  const [messageType, setMessageType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
   const handleRegister = async () => {
     try {
       const user = await vm.register(name, email, password);
 
-      Alert.alert("Success", `Welcome ${user.name}!`);
+      setMessage(`Welcome ${user.name}!`);
+
+      setMessageType("success");
     } catch (error) {
-      Alert.alert("Registration Failed", "Please try again.");
+      setMessage("Registration failed.");
+
+      setMessageType("error");
     }
   };
 
@@ -46,7 +62,9 @@ export default function RegisterScreen() {
         style={styles.input}
       />
 
-      <Button title="Register" onPress={handleRegister} />
+      <AppButton title="Register" onPress={handleRegister} />
+
+      {message ? <AppMessage message={message} type={messageType} /> : null}
     </View>
   );
 }
@@ -57,6 +75,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
+
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
