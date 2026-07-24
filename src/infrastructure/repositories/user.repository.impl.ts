@@ -16,29 +16,35 @@ export class UserRepositoryImpl implements IUserRepository {
   ) {}
 
   async login(email: string, password: string) {
-    const data = await this.api.login(email, password);
+    const res = await this.api.login(email, password);
+    const data = res.data;
 
-    const user = new UserEntity(data.user.id, data.user.name, data.user.email);
+    const user = new UserEntity(
+      data.user.id,
+      data.user.fullName,
+      data.user.email,
+    );
 
     return new AuthResponseEntity(
       user,
-
-      data.accessToken,
-
-      data.refreshToken,
+      data.access_token,
+      data.refresh_token,
     );
   }
 
-  async register(name: string, email: string, password: string) {
-    const data = await this.api.register(name, email, password);
+  async register(fullName: string, email: string, password: string) {
+    const res = await this.api.register(fullName, email, password);
+    const data = res.data;
 
-    const user = new UserEntity(data.user.id, data.user.name, data.user.email);
+    const user = new UserEntity(
+      data.id ?? email,
+      data.fullName,
+      data.email,
+    );
 
     return new AuthResponseEntity(
       user,
-
       data.accessToken,
-
       data.refreshToken,
     );
   }

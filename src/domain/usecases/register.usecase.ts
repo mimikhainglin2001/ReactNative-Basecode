@@ -9,7 +9,7 @@ export class RegisterUseCase {
     private repository: IUserRepository,
   ) {}
 
-  execute(name: string, email: string, password: string) {
-    return this.repository.register(name, email, password);
+  execute(fullName: string, email: string, password: string) {
+    return this.repository.register(fullName, email, password);
   }
 }

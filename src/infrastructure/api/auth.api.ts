@@ -4,7 +4,7 @@ import { apiClient } from "@/core/network/api-client";
 @injectable()
 export class AuthApi {
   async login(email: string, password: string) {
-    const response = await apiClient.post("/login", {
+    const response = await apiClient.post("/api/auth/login", {
       email,
       password,
     });
@@ -12,9 +12,9 @@ export class AuthApi {
     return response.data;
   }
 
-  async register(name: string, email: string, password: string) {
-    const response = await apiClient.post("/register", {
-      name,
+  async register(fullName: string, email: string, password: string) {
+    const response = await apiClient.post("/api/auth/register", {
+      fullName,
       email,
       password,
     });
@@ -23,7 +23,7 @@ export class AuthApi {
   }
 
   refreshToken(refreshToken: string) {
-    return apiClient.post("/refresh-token", {
+    return apiClient.post("/api/auth/refresh-token", {
       refreshToken,
     });
   }

@@ -4,7 +4,7 @@ export interface IUserRepository {
   login(email: string, password: string): Promise<AuthResponseEntity>;
 
   register(
-    name: string,
+    fullName: string,
     email: string,
     password: string,
   ): Promise<AuthResponseEntity>;
