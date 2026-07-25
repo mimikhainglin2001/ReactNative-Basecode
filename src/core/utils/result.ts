@@ -13,3 +13,19 @@ export class Result<T> {
     return new Result<T>(false, undefined, error);
   }
 }
+
+// Instead of returning:
+
+// return user;
+
+// we return
+
+// return Result.ok(user);
+
+// Instead of throwing:
+
+// throw new Error("Invalid password");
+
+// we return
+
+// return Result.fail("Invalid password");
