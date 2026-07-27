@@ -2,20 +2,22 @@ import React from "react";
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
-
-import ProfileScreen from "../screens/ProfileScreen";
+import BottomTabNavigator from "./BottomTabNavigator";
 
 import { AppStackParamList } from "./types";
-import HomeScreen from "../screens/HomeScreen";
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export default function AppNavigator() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeScreen} />
-
-      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen
+        name="Main"
+        component={BottomTabNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }

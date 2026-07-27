@@ -2,6 +2,8 @@ import React from "react";
 
 import { View, StyleSheet } from "react-native";
 
+import { Colors, Radius, Spacing } from "@/presentation/theme/theme";
+
 interface Props {
   children: React.ReactNode;
 }
@@ -12,14 +14,25 @@ export default function AppCard({ children }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    padding: 16,
+    backgroundColor: Colors.surface,
 
-    borderRadius: 12,
+    padding: Spacing.lg,
 
-    backgroundColor: "#fff",
+    borderRadius: Radius.lg,
 
-    shadowOpacity: 0.1,
+    marginTop: Spacing.md,
 
-    elevation: 3,
+    shadowColor: "#000",
+
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+
+    shadowOpacity: 0.08,
+
+    shadowRadius: 10,
+
+    elevation: 4,
   },
 });
