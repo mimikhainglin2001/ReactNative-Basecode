@@ -1,10 +1,10 @@
 import { loginUseCase } from "@/core/di/container";
-import container from "@/core/di/container";
 
-import { TokenManager } from "@/auth/token/TokenManager";
 import { useAuthStore } from "@/auth/store/auth.store";
 
-import { Result } from "@/core/utils/result";
+import { TokenManager } from "@/auth/token/TokenManager";
+
+const tokenManager = new TokenManager();
 
 export class LoginViewModel {
   async login(email: string, password: string) {
@@ -14,15 +14,16 @@ export class LoginViewModel {
       return result;
     }
 
-    const tokenManager = container.resolve<TokenManager>("TokenManager");
-
     await tokenManager.saveTokens(
       result.data!.accessToken,
+
       result.data!.refreshToken,
     );
 
+    await tokenManager.saveUser(result.data!.user);
+
     useAuthStore.getState().login(result.data!.user);
 
-    return Result.ok(result.data!.user);
+    return result.data!.user;
   }
 }
