@@ -1,32 +1,42 @@
-import { Spacing, Colors, Typography } from "@/presentation/theme/theme";
-
 import React from "react";
 
-import {
-  TextInput,
-  StyleSheet,
-  TextInputProps,
-  View,
-  Text,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet } from "react-native";
 
-interface AppInputProps extends TextInputProps {
+import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
+
+interface Props {
   label?: string;
 
   error?: string;
+
+  value: string;
+
+  onChangeText: (text: string) => void;
+
+  placeholder: string;
+
+  secureTextEntry?: boolean;
+
+  keyboardType?: any;
+
+  autoCapitalize?: any;
 }
 
 export default function AppInput({
   label,
+
   error,
-  style,
+
   ...props
-}: AppInputProps) {
+}: Props) {
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
 
-      <TextInput {...props} style={[styles.input, style]} />
+      <TextInput
+        {...props}
+        style={[styles.input, error && styles.errorInput]}
+      />
 
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
@@ -34,16 +44,14 @@ export default function AppInput({
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginBottom: Spacing.sm,
+  container: {
+    marginBottom: Spacing.md,
   },
 
   label: {
     ...Typography.caption,
 
     color: Colors.text,
-
-    fontWeight: "600",
 
     marginBottom: Spacing.xs,
   },
@@ -53,19 +61,21 @@ const styles = StyleSheet.create({
 
     borderColor: Colors.border,
 
-    padding: Spacing.md,
-
     borderRadius: 8,
+
+    padding: Spacing.md,
 
     backgroundColor: Colors.surface,
 
     color: Colors.text,
+  },
 
-    fontSize: Typography.body.fontSize,
+  errorInput: {
+    borderColor: "red",
   },
 
   error: {
-    color: Colors.error,
+    color: "red",
 
     marginTop: 4,
 

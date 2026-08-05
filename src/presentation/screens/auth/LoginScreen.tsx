@@ -15,6 +15,10 @@ import { LoginViewModel } from "@/presentation/viewmodels/LoginViewModel";
 import { AuthStackParamList } from "@/presentation/navigation/types";
 import AppHeader from "@/presentation/components/Header/AppHeader";
 import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
+import { loginSchema, LoginForm } from "@/presentation/validation/login.schema";
+import { useForm, Controller } from "react-hook-form";
+
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Login">;
 
@@ -22,41 +26,31 @@ export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
 
   const vm = useMemo(() => new LoginViewModel(), []);
-
-  const [email, setEmail] = useState("");
-
-  const [password, setPassword] = useState("");
-
   const [message, setMessage] = useState("");
 
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
   const [messageType, setMessageType] = useState<
     "success" | "error" | "warning" | "info"
   >("info");
 
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      setMessage("Please fill all fields");
-
-      setMessageType("warning");
-
-      return;
-    }
+  const handleLogin = async (data: LoginForm) => {
+    setLoading(true);
 
     try {
-      setLoading(true);
-
-      const result = await vm.login(email, password);
+      const result = await vm.login(data.email, data.password);
 
       if (result.success) {
         setMessage(`Welcome ${result.data?.name}`);
-
-        setMessageType("success");
       } else {
-        setMessage(result.error!);
-
-        setMessageType("error");
+        setMessage(result.error ?? "Login failed");
       }
     } finally {
       setLoading(false);
@@ -67,21 +61,35 @@ export default function LoginScreen() {
     <AuthLayout>
       <AppHeader title="EnterpriseRN" subtitle="Sign in to your account" />
 
-      <AppInput
-        label="Email"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
+      <Controller
+        control={control}
+        name="email"
+        render={({ field }) => (
+          <AppInput
+            label="Email"
+            placeholder="Email"
+            value={field.value}
+            onChangeText={field.onChange}
+            error={errors.email?.message}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+        )}
       />
 
-      <AppInput
-        label="Password"
-        placeholder="Password"
-        value={password}
-        secureTextEntry
-        onChangeText={setPassword}
+      <Controller
+        control={control}
+        name="password"
+        render={({ field }) => (
+          <AppInput
+            label="Password"
+            secureTextEntry
+            placeholder="Password"
+            value={field.value}
+            onChangeText={field.onChange}
+            error={errors.password?.message}
+          />
+        )}
       />
 
       <View style={{ marginTop: Spacing.md }}>
@@ -89,7 +97,7 @@ export default function LoginScreen() {
           title="Login"
           loading={loading}
           disabled={loading}
-          onPress={handleLogin}
+          onPress={handleSubmit(handleLogin)}
         />
       </View>
 
