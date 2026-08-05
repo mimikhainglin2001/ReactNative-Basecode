@@ -21,7 +21,7 @@ export class UserRepositoryImpl implements IUserRepository {
     try {
       const res = await this.api.login(email, password);
 
-      const data = res.data;
+      const data = res.data.data;
 
       const user = new UserEntity(
         data.user.id,
@@ -31,8 +31,8 @@ export class UserRepositoryImpl implements IUserRepository {
 
       const auth = new AuthResponseEntity(
         user,
-        data.access_token,
-        data.refresh_token,
+        data.accessToken,
+        data.refreshToken,
       );
 
       return Result.ok(auth);
@@ -45,9 +45,9 @@ export class UserRepositoryImpl implements IUserRepository {
     try {
       const res = await this.api.register(fullName, email, password);
 
-      const data = res.data;
+      const data = res.data.data;
 
-      const user = new UserEntity(data.id ?? email, data.fullName, data.email);
+      const user = new UserEntity(data.id, data.fullName, data.email);
 
       const auth = new AuthResponseEntity(
         user,
