@@ -55,17 +55,17 @@ export default function RegisterScreen() {
       const result = await vm.register(fullName.trim(), email.trim(), password);
 
       if (result.success) {
-        setMessage(`Welcome ${result.data?.name}!`);
+        setMessage("Account created. Check your email for the verification code.");
 
         setMessageType("success");
 
-        /*
-          Later:
-          after auto login,
-          navigate to Home
+        navigation.navigate("VerifyEmail", {
+          verificationId: result.data!.verificationId,
 
-          navigation.replace("Home")
-        */
+          email: email.trim(),
+
+          password,
+        });
       } else {
         setMessage(result.error ?? "Registration failed.");
 

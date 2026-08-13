@@ -1,4 +1,4 @@
 export const ENV = {
-  API_URL: "http://localhost:5002/api",
+  API_URL: "http://127.0.0.1:3000",
   APP_NAME: "EnterpriseRN",
 };

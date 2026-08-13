@@ -1,6 +1,6 @@
 import { injectable, inject } from "tsyringe";
 
-import { IUserRepository } from "@/domain/repositories/user.repository";
+import { IUserRepository, RegisterResult } from "@/domain/repositories/user.repository";
 
 import { UserEntity } from "@/domain/entities/user.entity";
 
@@ -21,19 +21,13 @@ export class UserRepositoryImpl implements IUserRepository {
     try {
       const res = await this.api.login(email, password);
 
-      const data = res.data.data;
+      const { accessToken, refreshToken } = res.data;
 
-      const user = new UserEntity(
-        data.user.id,
-        data.user.fullName,
-        data.user.email,
-      );
+      const me = await this.api.getMe(accessToken);
 
-      const auth = new AuthResponseEntity(
-        user,
-        data.accessToken,
-        data.refreshToken,
-      );
+      const user = new UserEntity(me.data.id, me.data.name, me.data.email);
+
+      const auth = new AuthResponseEntity(user, accessToken, refreshToken);
 
       return Result.ok(auth);
     } catch (error) {
@@ -41,23 +35,38 @@ export class UserRepositoryImpl implements IUserRepository {
     }
   }
 
-  async register(fullName: string, email: string, password: string) {
+  async register(name: string, email: string, password: string) {
     try {
-      const res = await this.api.register(fullName, email, password);
+      const res = await this.api.register(name, email, password);
 
-      const data = res.data.data;
+      return Result.ok({ verificationId: res.data.verificationId });
+    } catch (error) {
+      return Result.fail<RegisterResult>(getApiError(error));
+    }
+  }
 
-      const user = new UserEntity(data.id, data.fullName, data.email);
+  async verifyEmail(
+    verificationId: string,
+    otp: string,
+    email: string,
+    password: string,
+  ) {
+    try {
+      await this.api.verifyEmail(verificationId, otp);
 
-      const auth = new AuthResponseEntity(
-        user,
-        data.accessToken,
-        data.refreshToken,
-      );
-
-      return Result.ok(auth);
+      return this.login(email, password);
     } catch (error) {
       return Result.fail<AuthResponseEntity>(getApiError(error));
+    }
+  }
+
+  async resendVerification(verificationId: string) {
+    try {
+      await this.api.resendVerification(verificationId);
+
+      return Result.ok(true);
+    } catch (error) {
+      return Result.fail<boolean>(getApiError(error));
     }
   }
 }

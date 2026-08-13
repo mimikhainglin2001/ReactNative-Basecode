@@ -3,13 +3,18 @@ import { injectable, inject } from "tsyringe";
 import { IUserRepository } from "../repositories/user.repository";
 
 @injectable()
-export class RegisterUseCase {
+export class VerifyEmailUseCase {
   constructor(
     @inject("IUserRepository")
     private repository: IUserRepository,
   ) {}
 
-  execute(name: string, email: string, password: string) {
-    return this.repository.register(name, email, password);
+  execute(
+    verificationId: string,
+    otp: string,
+    email: string,
+    password: string,
+  ) {
+    return this.repository.verifyEmail(verificationId, otp, email, password);
   }
 }

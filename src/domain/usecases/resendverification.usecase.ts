@@ -3,13 +3,13 @@ import { injectable, inject } from "tsyringe";
 import { IUserRepository } from "../repositories/user.repository";
 
 @injectable()
-export class RegisterUseCase {
+export class ResendVerificationUseCase {
   constructor(
     @inject("IUserRepository")
     private repository: IUserRepository,
   ) {}
 
-  execute(name: string, email: string, password: string) {
-    return this.repository.register(name, email, password);
+  execute(verificationId: string) {
+    return this.repository.resendVerification(verificationId);
   }
 }

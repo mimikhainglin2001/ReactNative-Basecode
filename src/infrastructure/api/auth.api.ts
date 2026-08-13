@@ -4,24 +4,46 @@ import { apiClient } from "@/core/network/api-client";
 @injectable()
 export class AuthApi {
   async login(email: string, password: string) {
-    return apiClient.post("/auth/login", {
+    return apiClient.post("/v1/auth/login", {
       email,
       password,
     });
   }
 
-  async register(fullName: string, email: string, password: string) {
-    return apiClient.post("/auth/register", {
-      fullName,
+  async register(name: string, email: string, password: string) {
+    return apiClient.post("/v1/auth/register", {
+      name,
 
       email,
 
       password,
+    });
+  }
+
+  async verifyEmail(verificationId: string, otp: string) {
+    return apiClient.post("/v1/auth/verify-email", {
+      verificationId,
+
+      otp,
+    });
+  }
+
+  async resendVerification(verificationId: string) {
+    return apiClient.post("/v1/auth/resend-verification", {
+      verificationId,
+    });
+  }
+
+  async getMe(accessToken: string) {
+    return apiClient.get("/v1/users/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
   }
 
   refreshToken(refreshToken: string) {
-    return apiClient.post("/api/auth/refresh-token", {
+    return apiClient.post("/v1/auth/refresh", {
       refreshToken,
     });
   }
