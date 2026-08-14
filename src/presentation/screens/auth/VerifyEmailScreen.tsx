@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-import { Text, View, StyleSheet } from "react-native";
+import { Text, View, StyleSheet, TextInput } from "react-native";
 
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 
@@ -10,13 +10,12 @@ import AuthLayout from "@/presentation/layout/AuthLayout";
 
 import AppHeader from "@/presentation/components/Header/AppHeader";
 
-import { AppButton, AppInput, AppMessage } from "@/presentation/components";
+import { AppButton, AppMessage } from "@/presentation/components";
 
 import { VerifyEmailViewModel } from "@/presentation/viewmodels/VerifyEmailViewModel";
 
-import {
-  AuthStackParamList,
-} from "@/presentation/navigation/types";
+import { AuthStackParamList } from "@/presentation/navigation/types";
+
 import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
 
 type NavigationProp = NativeStackNavigationProp<
@@ -61,7 +60,12 @@ export default function VerifyEmailScreen() {
     setMessage("");
 
     try {
-      const result = await vm.verify(verificationId, otp.trim(), email, password);
+      const result = await vm.verify(
+        verificationId,
+        otp.trim(),
+        email,
+        password,
+      );
 
       if (result.success) {
         setMessage(`Welcome ${result.data?.user.name}!`);
@@ -103,6 +107,22 @@ export default function VerifyEmailScreen() {
     }
   };
 
+  const handleOtpChange = (value: string, index: number) => {
+    const digits = value.replace(/[^0-9]/g, "").slice(0, 6 - index).split("");
+
+    const otpArray = otp.split("");
+
+    if (digits.length === 0) {
+      otpArray[index] = "";
+    } else {
+      digits.forEach((digit, i) => {
+        otpArray[index + i] = digit;
+      });
+    }
+
+    setOtp(otpArray.join(""));
+  };
+
   return (
     <AuthLayout>
       <AppHeader
@@ -111,13 +131,18 @@ export default function VerifyEmailScreen() {
       />
 
       <View style={styles.form}>
-        <AppInput
-          label="Verification code"
-          placeholder="Enter 6-digit code"
-          value={otp}
-          onChangeText={setOtp}
-          keyboardType="number-pad"
-        />
+        <View style={styles.otpContainer}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <TextInput
+              key={index}
+              value={otp[index] ?? ""}
+              onChangeText={(value) => handleOtpChange(value, index)}
+              keyboardType="number-pad"
+              textAlign="center"
+              style={styles.otpInput}
+            />
+          ))}
+        </View>
 
         <View style={styles.buttonWrapper}>
           <AppButton
@@ -152,23 +177,38 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
 
+  otpContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: Spacing.sm,
+  },
+
+  otpInput: {
+    flex: 1,
+    height: 56,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 10,
+    backgroundColor: Colors.background,
+    fontSize: 22,
+    fontWeight: "600",
+    color: Colors.text,
+    textAlign: "center",
+  },
+
   buttonWrapper: {
     marginTop: Spacing.md,
   },
 
   linkText: {
     ...Typography.caption,
-
     color: Colors.textSecondary,
-
     textAlign: "center",
-
     marginTop: Spacing.lg,
   },
 
   link: {
     color: Colors.primary,
-
     fontWeight: "600",
   },
 });

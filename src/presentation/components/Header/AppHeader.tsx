@@ -30,6 +30,7 @@ const styles = StyleSheet.create({
     ...Typography.title,
 
     color: Colors.text,
+    justifyContent: "center",
   },
 
   subtitle: {

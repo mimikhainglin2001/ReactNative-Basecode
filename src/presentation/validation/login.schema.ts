@@ -5,9 +5,13 @@ export const loginSchema = z.object({
     .string()
     .trim()
     .min(1, "Email is required")
-    .email("Invalid email address"),
+    .email("Please enter a valid email address"),
 
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(6, "Password must be at least 6 characters"),
 });
 
-export type LoginForm = z.infer<typeof loginSchema>;
+export type LoginFormData = z.infer<typeof loginSchema>; // automatically creates the TypeScript type
+
