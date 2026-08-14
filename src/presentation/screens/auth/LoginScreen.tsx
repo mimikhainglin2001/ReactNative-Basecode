@@ -1,203 +1,252 @@
 import React, { useMemo, useState } from "react";
 
 import {
-  View,
-  StyleSheet,
-  Text,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
 
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { useForm, Controller } from "react-hook-form";
+import { Controller } from "react-hook-form";
 
-import { zodResolver } from "@hookform/resolvers/zod";
+import AuthLayout from "@/presentation/layout/AuthLayout";
+
+import {
+  AppButton,
+  AppHeader,
+  AppInput,
+  AppMessage,
+} from "@/presentation/components";
 
 import { LoginViewModel } from "@/presentation/viewmodels/LoginViewModel";
 
 import { AuthStackParamList } from "@/presentation/navigation/types";
 
-import { AppButton, AppInput, AppMessage } from "@/presentation/components";
+import { useLoginForm } from "@/presentation/hooks/useLoginForm";
 
-import {
-  loginSchema,
-  LoginFormData,
-} from "@/presentation/validation/login.schema";
-
-import { Colors } from "@/presentation/theme/colors";
-
-import { Spacing } from "@/presentation/theme/spacing";
-
-import { Typography } from "@/presentation/theme/typography";
+import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Login">;
+
+type MessageType = "success" | "error" | "warning" | "info";
+
+interface MessageState {
+  text: string;
+  type: MessageType;
+}
 
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
 
-  const vm = useMemo(() => new LoginViewModel(), []);
+  /*
+   * Create ViewModel once.
+   */
+  const viewModel = useMemo(() => new LoginViewModel(), []);
 
-  const [message, setMessage] = useState("");
+  /*
+   * Form logic lives inside the hook.
+   */
+  const { control, handleSubmit } = useLoginForm();
 
-  const [messageType, setMessageType] = useState<
-    "success" | "error" | "warning" | "info"
-  >("info");
-
+  /*
+   * Screen UI state.
+   */
   const [loading, setLoading] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
+  const [message, setMessage] = useState<MessageState | null>(null);
 
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+  /*
+   * Login handler.
+   *
+   * This function receives only
+   * validated form data.
+   */
+  const handleLogin = async (data: { email: string; password: string }) => {
+    if (loading) {
+      return;
+    }
 
-    mode: "onSubmit",
-  });
-
-  const handleLogin = async (data: LoginFormData) => {
     setLoading(true);
-    setMessage("");
+
+    setMessage(null);
 
     try {
-      const result = await vm.login(data.email, data.password);
+      const result = await viewModel.login(data.email, data.password);
 
-      if (result.success) {
-        setMessage(`Welcome ${result.data?.name}!`);
+      /*
+       * Business/API failure.
+       */
+      if (!result.success) {
+        setMessage({
+          text: result.error ?? "Unable to sign in.",
+          type: "error",
+        });
 
-        setMessageType("success");
-      } else {
-        setMessage(result.error ?? "Login failed.");
-
-        setMessageType("error");
+        return;
       }
+
+      /*
+       * Authentication succeeded.
+       *
+       * LoginViewModel should already
+       * update auth state / token storage.
+       *
+       * RootNavigator should react to
+       * the authenticated state.
+       */
+      setMessage({
+        text: `Welcome ${result.data?.name ?? ""}!`,
+        type: "success",
+      });
     } catch (error) {
-      console.error("Login error:", error);
+      /*
+       * Do not expose technical error
+       * details to the user.
+       */
+      console.error("LoginScreen error:", error);
 
-      setMessage("Something went wrong. Please try again.");
-
-      setMessageType("error");
+      setMessage({
+        text: "Something went wrong. Please try again.",
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  /*
+   * Navigate to registration.
+   */
+  const handleRegisterPress = () => {
+    if (loading) {
+      return;
+    }
+
+    navigation.navigate("Register");
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.wrapper}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
+    <AuthLayout>
+      <KeyboardAvoidingView
+        style={styles.wrapper}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.container}>
-          <Text style={styles.title}>EnterpriseRN</Text>
-
-          <Text style={styles.subtitle}>Sign in to your account</Text>
-
-          <View style={styles.form}>
-            <Controller
-              control={control}
-              name="email"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <AppInput
-                  label="Email"
-                  placeholder="Enter your email"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  error={errors.email?.message}
-                />
-              )}
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.container}>
+            <AppHeader
+              title="EnterpriseRN"
+              subtitle="Sign in to your account"
             />
 
-            <Controller
-              control={control}
-              name="password"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <AppInput
-                  label="Password"
-                  placeholder="Enter your password"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  secureTextEntry
-                  error={errors.password?.message}
-                />
-              )}
-            />
+            <View style={styles.form}>
+              {/* EMAIL */}
 
-            <View style={styles.buttonWrapper}>
-              <AppButton
-                title="Login"
-                onPress={handleSubmit(handleLogin)}
-                loading={loading}
-                disabled={loading}
+              <Controller
+                control={control}
+                name="email"
+                render={({
+                  field: { onChange, onBlur, value },
+                  fieldState: { error },
+                }) => (
+                  <AppInput
+                    label="Email"
+                    placeholder="Enter your email"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    keyboardType="email-address"
+                    editable={!loading}
+                    error={error?.message}
+                  />
+                )}
               />
+
+              {/* PASSWORD */}
+
+              <Controller
+                control={control}
+                name="password"
+                render={({
+                  field: { onChange, onBlur, value },
+                  fieldState: { error },
+                }) => (
+                  <AppInput
+                    label="Password"
+                    placeholder="Enter your password"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="password"
+                    textContentType="password"
+                    editable={!loading}
+                    error={error?.message}
+                  />
+                )}
+              />
+
+              {/* LOGIN */}
+
+              <View style={styles.buttonWrapper}>
+                <AppButton
+                  title="Login"
+                  onPress={handleSubmit(handleLogin)}
+                  loading={loading}
+                  disabled={loading}
+                />
+              </View>
+
+              {/* SERVER MESSAGE */}
+
+              {message ? (
+                <AppMessage message={message.text} type={message.type} />
+              ) : null}
             </View>
 
-            {message ? (
-              <AppMessage message={message} type={messageType} />
-            ) : null}
-          </View>
+            {/* REGISTER */}
 
-          <Text style={styles.linkText}>
-            Don't have an account?{" "}
-            <Text
-              style={styles.link}
-              onPress={() => navigation.navigate("Register")}
-            >
-              Register
+            <Text style={styles.linkText}>
+              Don't have an account?{" "}
+              <Text style={styles.link} onPress={handleRegisterPress}>
+                Register
+              </Text>
             </Text>
-          </Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   scroll: {
     flexGrow: 1,
-    justifyContent: "center",
   },
 
   container: {
     flex: 1,
+
     justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-
-  title: {
-    ...Typography.title,
-    color: Colors.text,
-    textAlign: "center",
-    marginBottom: Spacing.xs,
-  },
-
-  subtitle: {
-    ...Typography.body,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginBottom: Spacing.xl,
   },
 
   form: {
@@ -210,13 +259,17 @@ const styles = StyleSheet.create({
 
   linkText: {
     ...Typography.caption,
+
     color: Colors.textSecondary,
+
     textAlign: "center",
-    marginTop: Spacing.lg,
+
+    marginTop: Spacing.xl,
   },
 
   link: {
     color: Colors.primary,
+
     fontWeight: "600",
   },
 });

@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
 
     color: Colors.text,
     justifyContent: "center",
+    textAlign: "center",
   },
 
   subtitle: {
@@ -39,5 +40,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
 
     marginTop: Spacing.xs,
+    textAlign: "center",
   },
 });

@@ -5,13 +5,14 @@ export type AuthStackParamList = {
 
   VerifyEmail: {
     verificationId: string;
-
     email: string;
-
     password: string;
   };
 };
 
 export type AppStackParamList = {
-  Main: undefined;
+  Home: undefined;
+  Profile: undefined;
+  Notification: undefined;
+  Settings: undefined;
 };

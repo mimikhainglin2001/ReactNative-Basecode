@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 export const verifyEmailSchema = z.object({
-  code: z
+  otp: z
     .string()
     .trim()
-    .length(6, "Verification code must be 6 digits")
-    .regex(/^\d{6}$/, "Verification code must contain only numbers"),
+    .regex(/^\d{6}$/, "Please enter the 6-digit verification code."),
 });
+
+export type VerifyEmailFormData = z.infer<typeof verifyEmailSchema>;

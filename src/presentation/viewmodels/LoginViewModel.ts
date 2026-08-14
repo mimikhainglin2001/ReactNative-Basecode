@@ -5,28 +5,29 @@ import { useAuthStore } from "@/auth/store/auth.store";
 import { TokenManager } from "@/auth/token/TokenManager";
 
 import { Result } from "@/core/utils/result";
-import { UserEntity } from "@/domain/entities/user.entity";
 
 const tokenManager = new TokenManager();
 
 export class LoginViewModel {
-  async login(email: string, password: string): Promise<Result<UserEntity>> {
+  async login(email: string, password: string) {
     const result = await loginUseCase.execute(email, password);
 
     if (!result.success) {
-      return Result.fail(result.error ?? "Login failed");
+      return result;
     }
 
-    await tokenManager.saveTokens(
-      result.data!.accessToken,
+    const auth = result.data;
 
-      result.data!.refreshToken,
-    );
+    if (!auth) {
+      return Result.fail("Invalid authentication response.");
+    }
 
-    await tokenManager.saveUser(result.data!.user);
+    await tokenManager.saveTokens(auth.accessToken, auth.refreshToken);
 
-    useAuthStore.getState().login(result.data!.user);
+    await tokenManager.saveUser(auth.user);
 
-    return Result.ok(result.data!.user);
+    useAuthStore.getState().login(auth.user);
+
+    return Result.ok(auth.user);
   }
 }

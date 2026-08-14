@@ -1,6 +1,14 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 
-import { Text, View, StyleSheet, TextInput } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 
@@ -8,13 +16,11 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import AuthLayout from "@/presentation/layout/AuthLayout";
 
-import AppHeader from "@/presentation/components/Header/AppHeader";
-
-import { AppButton, AppMessage } from "@/presentation/components";
-
-import { VerifyEmailViewModel } from "@/presentation/viewmodels/VerifyEmailViewModel";
+import { AppButton, AppHeader, AppMessage } from "@/presentation/components";
 
 import { AuthStackParamList } from "@/presentation/navigation/types";
+
+import { useVerifyEmailForm } from "@/presentation/hooks/useVerifyEmailForm";
 
 import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
 
@@ -23,177 +29,218 @@ type NavigationProp = NativeStackNavigationProp<
   "VerifyEmail"
 >;
 
-type RoutePropType = RouteProp<AuthStackParamList, "VerifyEmail">;
+type VerifyEmailRoute = RouteProp<AuthStackParamList, "VerifyEmail">;
 
 export default function VerifyEmailScreen() {
   const navigation = useNavigation<NavigationProp>();
 
-  const route = useRoute<RoutePropType>();
+  const route = useRoute<VerifyEmailRoute>();
 
   const { verificationId, email, password } = route.params;
 
-  const vm = useMemo(() => new VerifyEmailViewModel(), []);
+  const {
+    control,
 
-  const [otp, setOtp] = useState("");
+    errors,
 
-  const [message, setMessage] = useState("");
+    otp,
 
-  const [messageType, setMessageType] = useState<
-    "success" | "error" | "warning" | "info"
-  >("info");
+    inputRefs,
 
-  const [loading, setLoading] = useState(false);
+    message,
 
-  const [resending, setResending] = useState(false);
+    messageType,
 
-  const handleVerify = async () => {
-    if (!otp.trim()) {
-      setMessage("Please enter the 6-digit code.");
+    loading,
 
-      setMessageType("warning");
+    resending,
 
-      return;
-    }
+    handleSubmit,
 
-    setLoading(true);
+    handleVerify,
 
-    setMessage("");
+    handleResend,
 
-    try {
-      const result = await vm.verify(
-        verificationId,
-        otp.trim(),
-        email,
-        password,
-      );
+    handleOtpChange,
 
-      if (result.success) {
-        setMessage(`Welcome ${result.data?.user.name}!`);
+    handleOtpKeyPress,
+  } = useVerifyEmailForm({
+    verificationId,
+    email,
+    password,
+  });
 
-        setMessageType("success");
-      } else {
-        setMessage(result.error ?? "Verification failed.");
-
-        setMessageType("error");
-      }
-    } catch (error: any) {
-      setMessage(error?.message ?? "Verification failed.");
-
-      setMessageType("error");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    setResending(true);
-
-    setMessage("");
-
-    try {
-      const result = await vm.resend(verificationId);
-
-      if (result.success) {
-        setMessage("Verification code resent. Check your email.");
-
-        setMessageType("info");
-      } else {
-        setMessage(result.error ?? "Failed to resend code.");
-
-        setMessageType("error");
-      }
-    } finally {
-      setResending(false);
-    }
-  };
-
-  const handleOtpChange = (value: string, index: number) => {
-    const digits = value.replace(/[^0-9]/g, "").slice(0, 6 - index).split("");
-
-    const otpArray = otp.split("");
-
-    if (digits.length === 0) {
-      otpArray[index] = "";
-    } else {
-      digits.forEach((digit, i) => {
-        otpArray[index + i] = digit;
-      });
-    }
-
-    setOtp(otpArray.join(""));
-  };
+  const isDisabled = loading || resending;
 
   return (
     <AuthLayout>
-      <AppHeader
-        title="Verify Email"
-        subtitle={`We sent a 6-digit code to ${email}`}
-      />
+      <KeyboardAvoidingView
+        style={styles.wrapper}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            {/* HEADER */}
 
-      <View style={styles.form}>
-        <View style={styles.otpContainer}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <TextInput
-              key={index}
-              value={otp[index] ?? ""}
-              onChangeText={(value) => handleOtpChange(value, index)}
-              keyboardType="number-pad"
-              textAlign="center"
-              style={styles.otpInput}
+            <AppHeader
+              title="Verify Email"
+              subtitle={`We sent a 6-digit code to ${email}`}
             />
-          ))}
-        </View>
 
-        <View style={styles.buttonWrapper}>
-          <AppButton
-            title="Verify"
-            onPress={handleVerify}
-            loading={loading}
-            disabled={loading}
-          />
-        </View>
+            {/* FORM */}
 
-        <AppButton
-          title="Resend code"
-          onPress={handleResend}
-          loading={resending}
-          disabled={resending || loading}
-        />
+            <View style={styles.form}>
+              {/* OTP */}
 
-        {message ? <AppMessage message={message} type={messageType} /> : null}
-      </View>
+              <View style={styles.otpContainer}>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <TextInput
+                    key={index}
+                    ref={(ref) => {
+                      inputRefs.current[index] = ref;
+                    }}
+                    value={otp[index] ?? ""}
+                    onChangeText={(value) => handleOtpChange(value, index)}
+                    onKeyPress={(event) =>
+                      handleOtpKeyPress(event.nativeEvent.key, index)
+                    }
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    textAlign="center"
+                    editable={!isDisabled}
+                    selectTextOnFocus
+                    autoFocus={index === 0}
+                    style={[
+                      styles.otpInput,
 
-      <Text style={styles.linkText}>
-        <Text style={styles.link} onPress={() => navigation.replace("Login")}>
-          Back to login
-        </Text>
-      </Text>
+                      errors.otp ? styles.otpInputError : undefined,
+                    ]}
+                  />
+                ))}
+              </View>
+
+              {/* VALIDATION ERROR */}
+
+              {errors.otp?.message ? (
+                <Text style={styles.errorText}>{errors.otp.message}</Text>
+              ) : null}
+
+              {/* VERIFY BUTTON */}
+
+              <View style={styles.buttonWrapper}>
+                <AppButton
+                  title="Verify Email"
+                  onPress={handleSubmit(handleVerify)}
+                  loading={loading}
+                  disabled={isDisabled}
+                />
+              </View>
+
+              {/* RESEND */}
+
+              <AppButton
+                title="Resend Code"
+                onPress={handleResend}
+                loading={resending}
+                disabled={isDisabled}
+              />
+
+              {/* SERVER MESSAGE */}
+
+              {message ? (
+                <AppMessage message={message} type={messageType} />
+              ) : null}
+            </View>
+
+            {/* BACK TO LOGIN */}
+
+            <Text style={styles.linkText}>
+              <Text
+                style={styles.link}
+                onPress={() => {
+                  if (isDisabled) {
+                    return;
+                  }
+
+                  navigation.replace("Login");
+                }}
+              >
+                Back to login
+              </Text>
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+  },
+
+  scroll: {
+    flexGrow: 1,
+
+    justifyContent: "center",
+  },
+
+  container: {
+    flex: 1,
+
+    justifyContent: "center",
+  },
+
   form: {
     gap: Spacing.sm,
   },
 
   otpContainer: {
     flexDirection: "row",
+
     justifyContent: "space-between",
+
     gap: Spacing.sm,
+
+    marginTop: Spacing.xl,
   },
 
   otpInput: {
     flex: 1,
+
     height: 56,
+
     borderWidth: 1,
+
     borderColor: Colors.border,
+
     borderRadius: 10,
+
     backgroundColor: Colors.background,
+
     fontSize: 22,
+
     fontWeight: "600",
+
     color: Colors.text,
+
     textAlign: "center",
+  },
+
+  otpInputError: {
+    borderColor: Colors.error,
+  },
+
+  errorText: {
+    ...Typography.caption,
+
+    color: Colors.error,
+
+    marginTop: Spacing.xs,
   },
 
   buttonWrapper: {
@@ -202,13 +249,17 @@ const styles = StyleSheet.create({
 
   linkText: {
     ...Typography.caption,
+
     color: Colors.textSecondary,
+
     textAlign: "center",
+
     marginTop: Spacing.lg,
   },
 
   link: {
     color: Colors.primary,
+
     fontWeight: "600",
   },
 });

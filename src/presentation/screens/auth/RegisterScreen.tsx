@@ -1,6 +1,13 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 
-import { Text, View, StyleSheet } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
 
@@ -8,306 +15,204 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import AuthLayout from "@/presentation/layout/AuthLayout";
 
-import AppHeader from "@/presentation/components/Header/AppHeader";
-
-import { AppButton, AppInput, AppMessage } from "@/presentation/components";
-
-import { RegisterViewModel } from "@/presentation/viewmodels/RegisterViewModel";
+import {
+  AppButton,
+  AppHeader,
+  AppInput,
+  AppMessage,
+} from "@/presentation/components";
 
 import { AuthStackParamList } from "@/presentation/navigation/types";
 
-import { registerSchema } from "@/presentation/validation/register.schema";
+import { useRegisterForm } from "@/presentation/hooks/useRegisterForm";
 
 import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
+import { Controller } from "react-hook-form";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Register">;
-
-type MessageType = "success" | "error" | "warning" | "info";
-
-interface FieldErrors {
-  fullName?: string;
-  email?: string;
-  password?: string;
-}
 
 export default function RegisterScreen() {
   const navigation = useNavigation<NavigationProp>();
 
-  const vm = useMemo(() => new RegisterViewModel(), []);
+  /*
+   * Registration form hook.
+   *
+   * Handles:
+   *
+   * - React Hook Form
+   * - Zod validation
+   * - ViewModel
+   * - API request
+   * - loading
+   * - server errors
+   */
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
 
-  const [fullName, setFullName] = useState("");
+    loading,
 
-  const [email, setEmail] = useState("");
+    message,
 
-  const [password, setPassword] = useState("");
+    messageType,
+
+    submit,
+  } = useRegisterForm();
 
   /*
-   * Field-level validation errors
+   * Registration succeeded.
+   *
+   * Navigation belongs to
+   * the screen.
    */
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-
-  /*
-   * General/API message
-   */
-  const [message, setMessage] = useState("");
-
-  const [messageType, setMessageType] = useState<MessageType>("info");
-
-  const [loading, setLoading] = useState(false);
-
-  const handleRegister = async () => {
-    /*
-     * Prevent double submission
-     */
-    if (loading) {
-      return;
-    }
-
-    /*
-     * Clear previous errors
-     */
-    setFieldErrors({});
-
-    setMessage("");
-
-    /*
-     * Form data
-     */
-    const formData = {
-      fullName,
+  const handleSuccess = (
+    verificationId: string,
+    email: string,
+    password: string,
+  ) => {
+    navigation.navigate("VerifyEmail", {
+      verificationId,
       email,
       password,
-    };
-
-    /*
-     * ZOD VALIDATION
-     */
-    const validation = registerSchema.safeParse(formData);
-
-    /*
-     * Validation failed
-     */
-    if (!validation.success) {
-      const errors: FieldErrors = {};
-
-      /*
-       * Convert Zod errors
-       * into field errors
-       */
-      validation.error.issues.forEach((issue) => {
-        const field = issue.path[0];
-
-        if (field === "fullName" || field === "email" || field === "password") {
-          /*
-           * Only show the first
-           * error for each field
-           */
-          if (!errors[field]) {
-            errors[field] = issue.message;
-          }
-        }
-      });
-
-      setFieldErrors(errors);
-
-      return;
-    }
-
-    /*
-     * Zod has successfully validated
-     * and cleaned the data.
-     */
-    const {
-      fullName: validatedFullName,
-      email: validatedEmail,
-      password: validatedPassword,
-    } = validation.data;
-
-    /*
-     * Start loading
-     */
-    setLoading(true);
-
-    try {
-      /*
-       * Call ViewModel
-       */
-      const result = await vm.register(
-        validatedFullName,
-        validatedEmail,
-        validatedPassword,
-      );
-
-      /*
-       * Backend/API error
-       */
-      if (!result.success) {
-        setMessage(result.error ?? "Registration failed.");
-
-        setMessageType("error");
-
-        return;
-      }
-
-      /*
-       * Get verification ID
-       */
-      const verificationId = result.data?.verificationId;
-
-      /*
-       * Make sure verificationId exists
-       */
-      if (!verificationId) {
-        console.error(
-          "Registration succeeded but verificationId is missing:",
-          result,
-        );
-
-        setMessage(
-          "Account was created, but email verification could not be started.",
-        );
-
-        setMessageType("error");
-
-        return;
-      }
-
-      /*
-       * Registration succeeded
-       */
-      setMessage(
-        "Account created. Check your email for the verification code.",
-      );
-
-      setMessageType("success");
-
-      /*
-       * Navigate to Verify Email
-       */
-      navigation.navigate("VerifyEmail", {
-        verificationId,
-        email: validatedEmail,
-
-        /*
-         * You should remove password
-         * from navigation params later.
-         *
-         * See note below.
-         */
-        password: validatedPassword,
-      });
-    } catch (error: any) {
-      console.error("Register error:", error);
-
-      setMessage(error?.message ?? "Registration failed.");
-
-      setMessageType("error");
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   return (
     <AuthLayout>
-      <View style={styles.container}>
-        <Text style={styles.title}>EnterpriseRN</Text>
-        <Text style={styles.subtitle}>Sign up to your account</Text>
-        <View style={styles.form}>
-          {/* NAME */}
+      <KeyboardAvoidingView
+        style={styles.wrapper}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            {/* HEADER */}
 
-          <AppInput
-            label="Name"
-            placeholder="Enter your name"
-            value={fullName}
-            onChangeText={setFullName}
-            autoCapitalize="words"
-            autoCorrect={false}
-            editable={!loading}
-            error={fieldErrors.fullName}
-          />
+            <AppHeader title="EnterpriseRN" subtitle="Create your account" />
 
-          {/* EMAIL */}
+            {/* FORM */}
 
-          <AppInput
-            label="Email"
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            editable={!loading}
-            error={fieldErrors.email}
-          />
+            <View style={styles.form}>
+              {/* NAME */}
 
-          {/* PASSWORD */}
+              <Controller
+                control={control}
+                name="fullName"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Name"
+                    placeholder="Enter your name"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="words"
+                    autoCorrect={false}
+                    editable={!loading}
+                    error={errors.fullName?.message}
+                  />
+                )}
+              />
 
-          <AppInput
-            label="Password"
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            editable={!loading}
-            error={fieldErrors.password}
-          />
+              {/* EMAIL */}
 
-          {/* REGISTER BUTTON */}
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Email"
+                    placeholder="Enter your email"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    keyboardType="email-address"
+                    editable={!loading}
+                    error={errors.email?.message}
+                  />
+                )}
+              />
 
-          <View style={styles.buttonWrapper}>
-            <AppButton
-              title="Register"
-              onPress={handleRegister}
-              loading={loading}
-              disabled={loading}
-            />
+              {/* PASSWORD */}
+
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Password"
+                    placeholder="Create a password"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                    error={errors.password?.message}
+                  />
+                )}
+              />
+
+              {/* REGISTER BUTTON */}
+
+              <View style={styles.buttonWrapper}>
+                <AppButton
+                  title="Create Account"
+                  onPress={handleSubmit(() => submit(handleSuccess))}
+                  loading={loading}
+                  disabled={loading}
+                />
+              </View>
+
+              {/* SERVER MESSAGE */}
+
+              {message ? (
+                <AppMessage message={message} type={messageType} />
+              ) : null}
+            </View>
+
+            {/* LOGIN */}
+
+            <Text style={styles.linkText}>
+              Already have an account?{" "}
+              <Text
+                style={styles.link}
+                onPress={() => {
+                  if (!loading) {
+                    navigation.navigate("Login");
+                  }
+                }}
+              >
+                Login
+              </Text>
+            </Text>
           </View>
-
-          {/* API / SERVER MESSAGE */}
-
-          {message ? <AppMessage message={message} type={messageType} /> : null}
-        </View>
-
-        {/* LOGIN LINK */}
-
-        <Text style={styles.linkText}>
-          Already have an account?{" "}
-          <Text
-            style={styles.link}
-            onPress={() => {
-              if (!loading) {
-                navigation.navigate("Login");
-              }
-            }}
-          >
-            Login
-          </Text>
-        </Text>
-      </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </AuthLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     flex: 1,
-    justifyContent: "center",
-  },
-  title: {
-    ...Typography.title,
-    color: Colors.text,
-    textAlign: "center",
-    marginBottom: Spacing.xs,
   },
 
-  subtitle: {
-    ...Typography.body,
-    color: Colors.textSecondary,
-    textAlign: "center",
-    marginBottom: Spacing.xl,
+  scroll: {
+    flexGrow: 1,
   },
+
+  container: {
+    flex: 1,
+
+    justifyContent: "center",
+  },
+
   form: {
     gap: Spacing.md,
   },
