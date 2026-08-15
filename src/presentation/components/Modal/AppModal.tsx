@@ -2,9 +2,9 @@ import React from "react";
 
 import { Modal, View, StyleSheet, Pressable } from "react-native";
 
-import AppText from "./AppText";
-import { AppButton } from "../components";
-import { Colors, Radius, Spacing } from "../theme/theme";
+import AppText from "@/presentation/common/AppText";
+import { AppButton } from "@/presentation/components";
+import { Colors, Radius, Spacing } from "@/presentation/theme/theme";
 
 interface Props {
   visible: boolean;

@@ -11,6 +11,8 @@ interface Props {
   loading?: boolean;
 
   disabled?: boolean;
+
+  variant?: "primary" | "outline";
 }
 
 export default function AppButton({
@@ -18,14 +20,31 @@ export default function AppButton({
   onPress,
   loading = false,
   disabled = false,
+  variant = "primary",
 }: Props) {
+  const isOutline = variant === "outline";
+
   return (
     <TouchableOpacity
-      style={[styles.container, disabled && styles.disabled]}
+      style={[
+        styles.container,
+
+        isOutline ? styles.outline : undefined,
+
+        disabled && styles.disabled,
+      ]}
       onPress={onPress}
       disabled={disabled}
     >
-      <Text style={styles.text}>{loading ? "Loading..." : title}</Text>
+      <Text
+        style={[
+          styles.text,
+
+          isOutline ? styles.outlineText : undefined,
+        ]}
+      >
+        {loading ? "Loading..." : title}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -41,6 +60,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  outline: {
+    backgroundColor: "transparent",
+
+    borderWidth: 1,
+
+    borderColor: Colors.primary,
+  },
+
   disabled: {
     opacity: 0.5,
   },
@@ -51,5 +78,9 @@ const styles = StyleSheet.create({
     fontSize: Typography.body.fontSize,
 
     fontWeight: "600",
+  },
+
+  outlineText: {
+    color: Colors.primary,
   },
 });

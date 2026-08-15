@@ -1,6 +1,11 @@
 import { injectable, inject } from "tsyringe";
 
-import { IUserRepository, RegisterResult } from "@/domain/repositories/user.repository";
+import {
+  IUserRepository,
+  RegisterResult,
+  ForgotPasswordResult,
+  VerifyForgotPasswordResult,
+} from "@/domain/repositories/user.repository";
 
 import { UserEntity } from "@/domain/entities/user.entity";
 
@@ -67,6 +72,57 @@ export class UserRepositoryImpl implements IUserRepository {
       return Result.ok(true);
     } catch (error) {
       return Result.fail<boolean>(getApiError(error));
+    }
+  }
+
+  async forgotPassword(email: string) {
+    try {
+      const res = await this.api.forgotPassword(email);
+
+      return Result.ok({
+        verificationId: res.data.data.verificationId,
+      } as ForgotPasswordResult);
+    } catch (error) {
+      return Result.fail<ForgotPasswordResult>(getApiError(error));
+    }
+  }
+
+  async resendForgotPassword(verificationId: string) {
+    try {
+      const res = await this.api.resendForgotPassword(verificationId);
+
+      return Result.ok({
+        verificationId: res.data.data.verificationId,
+      } as ForgotPasswordResult);
+    } catch (error) {
+      return Result.fail<ForgotPasswordResult>(getApiError(error));
+    }
+  }
+
+  async verifyForgotPassword(verificationId: string, otp: string) {
+    try {
+      const res = await this.api.verifyForgotPassword(verificationId, otp);
+
+      return Result.ok({
+        resetToken: res.data.data.resetToken,
+        expiresAt: res.data.data.expiresAt,
+      } as VerifyForgotPasswordResult);
+    } catch (error) {
+      return Result.fail<VerifyForgotPasswordResult>(getApiError(error));
+    }
+  }
+
+  async resetPassword(
+    resetToken: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) {
+    try {
+      await this.api.resetPassword(resetToken, newPassword, confirmPassword);
+
+      return Result.ok(undefined);
+    } catch (error) {
+      return Result.fail<void>(getApiError(error));
     }
   }
 }

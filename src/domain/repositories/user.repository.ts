@@ -5,6 +5,15 @@ export interface RegisterResult {
   verificationId: string;
 }
 
+export interface ForgotPasswordResult {
+  verificationId: string;
+}
+
+export interface VerifyForgotPasswordResult {
+  resetToken: string;
+  expiresAt: string;
+}
+
 export interface IUserRepository {
   login(email: string, password: string): Promise<Result<AuthResponseEntity>>;
   register(
@@ -19,4 +28,17 @@ export interface IUserRepository {
     password: string,
   ): Promise<Result<AuthResponseEntity>>;
   resendVerification(verificationId: string): Promise<Result<boolean>>;
+  forgotPassword(email: string): Promise<Result<ForgotPasswordResult>>;
+  resendForgotPassword(
+    verificationId: string,
+  ): Promise<Result<ForgotPasswordResult>>;
+  verifyForgotPassword(
+    verificationId: string,
+    otp: string,
+  ): Promise<Result<VerifyForgotPasswordResult>>;
+  resetPassword(
+    resetToken: string,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<Result<void>>;
 }

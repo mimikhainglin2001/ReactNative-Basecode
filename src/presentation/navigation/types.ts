@@ -8,11 +8,18 @@ export type AuthStackParamList = {
     email: string;
     password: string;
   };
+  ForgotPassword: undefined;
+
+  VerifyResetCode: {
+    verificationId: string;
+    email: string;
+  };
+
+  ResetPassword: {
+    resetToken: string;
+  };
 };
 
 export type AppStackParamList = {
-  Home: undefined;
-  Profile: undefined;
-  Notification: undefined;
-  Settings: undefined;
+  Main: undefined;
 };

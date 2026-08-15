@@ -11,6 +11,10 @@ import { ResendVerificationUseCase } from "@/domain/usecases/resendverification.
 
 import { IUserRepository } from "@/domain/repositories/user.repository";
 import { TokenManager } from "@/auth/token/TokenManager";
+import { ForgotPasswordUseCase } from "@/domain/usecases/forgotpassword.usecase";
+import { ResendForgotPasswordUseCase } from "@/domain/usecases/resendforgotpassword.usecase";
+import { VerifyForgotPasswordUseCase } from "@/domain/usecases/verifyforgotpassword.usecase";
+import { ResetPasswordUseCase } from "@/domain/usecases/resetpassword.usecase";
 
 container.register("AuthApi", { useClass: AuthApi });
 container.register<IUserRepository>("IUserRepository", {
@@ -21,6 +25,18 @@ container.register("RegisterUseCase", { useClass: RegisterUseCase });
 container.register("VerifyEmailUseCase", { useClass: VerifyEmailUseCase });
 container.register("ResendVerificationUseCase", {
   useClass: ResendVerificationUseCase,
+});
+container.register("ForgotPasswordUseCase", {
+  useClass: ForgotPasswordUseCase,
+});
+container.register("ResendForgotPasswordUseCase", {
+  useClass: ResendForgotPasswordUseCase,
+});
+container.register("VerifyForgotPasswordUseCase", {
+  useClass: VerifyForgotPasswordUseCase,
+});
+container.register("ResetPasswordUseCase", {
+  useClass: ResetPasswordUseCase,
 });
 container.register("TokenManager", {
   useClass: TokenManager,
@@ -33,3 +49,15 @@ export const verifyEmailUseCase =
   container.resolve<VerifyEmailUseCase>("VerifyEmailUseCase");
 export const resendVerificationUseCase =
   container.resolve<ResendVerificationUseCase>("ResendVerificationUseCase");
+export const forgotPasswordUseCase = container.resolve<ForgotPasswordUseCase>(
+  "ForgotPasswordUseCase",
+);
+export const resendForgotPasswordUseCase =
+  container.resolve<ResendForgotPasswordUseCase>(
+    "ResendForgotPasswordUseCase",
+  );
+export const verifyForgotPasswordUseCase =
+  container.resolve<VerifyForgotPasswordUseCase>("VerifyForgotPasswordUseCase");
+export const resetPasswordUseCase = container.resolve<ResetPasswordUseCase>(
+  "ResetPasswordUseCase",
+);

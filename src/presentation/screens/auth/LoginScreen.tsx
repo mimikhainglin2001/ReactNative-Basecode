@@ -201,6 +201,13 @@ export default function LoginScreen() {
                 )}
               />
 
+              <Text
+                style={styles.forgotPassword}
+                onPress={() => navigation.navigate("ForgotPassword")}
+              >
+                Forgot Password?
+              </Text>
+
               {/* LOGIN */}
 
               <View style={styles.buttonWrapper}>
@@ -271,5 +278,11 @@ const styles = StyleSheet.create({
     color: Colors.primary,
 
     fontWeight: "600",
+  },
+  forgotPassword: {
+    color: Colors.primary,
+    textAlign: "right",
+    fontWeight: "600",
+    marginTop: Spacing.xs,
   },
 });
