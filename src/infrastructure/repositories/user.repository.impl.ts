@@ -28,8 +28,7 @@ export class UserRepositoryImpl implements IUserRepository {
 
       const { accessToken, refreshToken } = res.data;
 
-      const me = await this.api.getMe(accessToken);
-
+      const me = await this.api.getMe();
       const user = new UserEntity(me.data.id, me.data.name, me.data.email);
 
       const auth = new AuthResponseEntity(user, accessToken, refreshToken);
@@ -123,6 +122,22 @@ export class UserRepositoryImpl implements IUserRepository {
       return Result.ok(undefined);
     } catch (error) {
       return Result.fail<void>(getApiError(error));
+    }
+  }
+
+  async getCurrentUser(): Promise<Result<UserEntity>> {
+    try {
+      const response = await this.api.getMe();
+
+      const user = new UserEntity(
+        response.data.id,
+        response.data.name,
+        response.data.email,
+      );
+
+      return Result.ok(user);
+    } catch (error) {
+      return Result.fail<UserEntity>(getApiError(error));
     }
   }
 }

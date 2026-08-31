@@ -23,6 +23,9 @@ import type { ITokenManager } from "@/auth/token/ITokenManager";
 
 import { TokenRefreshService } from "@/auth/services/token-refresh.service";
 import { TokenRefreshCoordinator } from "@/auth/services/token-refresh-coordinator";
+import { GetCurrentUserUseCase } from "@/domain/usecases/get-current-user.usecase";
+
+import { ProfileViewModel } from "@/presentation/viewmodels/ProfileViewModel";
 
 /*
  * API
@@ -88,6 +91,14 @@ container.register("ResetPasswordUseCase", {
   useClass: ResetPasswordUseCase,
 });
 
+container.register("GetCurrentUserUseCase", {
+  useClass: GetCurrentUserUseCase,
+});
+
+container.register("ProfileViewModel", {
+  useClass: ProfileViewModel,
+});
+
 /*
  * Token refresh
  */
@@ -125,6 +136,10 @@ export const verifyForgotPasswordUseCase =
 
 export const resetPasswordUseCase = container.resolve<ResetPasswordUseCase>(
   "ResetPasswordUseCase",
+);
+
+export const profileViewModel = container.resolve<ProfileViewModel>(
+  "ProfileViewModel",
 );
 
 export default container;

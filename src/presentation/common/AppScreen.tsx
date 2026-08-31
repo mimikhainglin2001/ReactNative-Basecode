@@ -1,6 +1,6 @@
 import React from "react";
 
-import { StyleSheet } from "react-native";
+import { StyleSheet, ViewStyle } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -8,11 +8,12 @@ import { Colors, Spacing } from "@/presentation/theme/theme";
 
 interface Props {
   children: React.ReactNode;
+  style?: ViewStyle;
 }
 
-export default function AppScreen({ children }: Props) {
+export default function AppScreen({ children, style }: Props) {
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, style]} edges={["top"]}>
       {children}
     </SafeAreaView>
   );
@@ -21,13 +22,9 @@ export default function AppScreen({ children }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-
     backgroundColor: Colors.background,
-
     paddingHorizontal: Spacing.lg,
-
     paddingTop: Spacing.md,
-
     paddingBottom: Spacing.md,
   },
 });

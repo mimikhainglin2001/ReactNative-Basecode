@@ -1,5 +1,6 @@
 import { Result } from "@/core/utils/result";
 import { AuthResponseEntity } from "../entities/auth-response.entity";
+import { UserEntity } from "../entities/user.entity";
 
 export interface RegisterResult {
   verificationId: string;
@@ -47,4 +48,6 @@ export interface IUserRepository {
     newPassword: string,
     confirmPassword: string,
   ): Promise<Result<void>>;
+
+  getCurrentUser(): Promise<Result<UserEntity>>;
 }

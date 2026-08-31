@@ -1,18 +1,30 @@
-export class Result<T> {
-  constructor(
-    public success: boolean,
-    public data?: T,
-    public error?: string,
-  ) {}
+export type Result<T> =
+  | {
+      success: true;
+      data: T;
+      error?: undefined;
+    }
+  | {
+      success: false;
+      data?: undefined;
+      error: string;
+    };
 
-  static ok<T>(data: T) {
-    return new Result<T>(true, data);
-  }
+export const Result = {
+  ok<T>(data: T): Result<T> {
+    return {
+      success: true,
+      data,
+    };
+  },
 
-  static fail<T>(error: string) {
-    return new Result<T>(false, undefined, error);
-  }
-}
+  fail<T>(error: string): Result<T> {
+    return {
+      success: false,
+      error,
+    };
+  },
+};
 
 // Instead of returning:
 

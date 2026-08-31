@@ -9,3 +9,5 @@ export { default as AppMessage } from "./Error/AppMessage";
 export { default as LoadingView } from "./Loading/LoadingView";
 
 export { default as AppCard } from "./Card/AppCard";
+
+export { default as AppAvatar } from "./Avatar/AppAvatar";
