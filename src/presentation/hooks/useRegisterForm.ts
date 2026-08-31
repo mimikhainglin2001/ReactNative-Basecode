@@ -53,6 +53,7 @@ export function useRegisterForm(): UseRegisterFormReturn {
       fullName: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
 
     mode: "onSubmit",

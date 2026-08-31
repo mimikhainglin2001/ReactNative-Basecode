@@ -197,6 +197,7 @@ export default function LoginScreen() {
                     textContentType="password"
                     editable={!loading}
                     error={error?.message}
+                    showPasswordToggle
                   />
                 )}
               />

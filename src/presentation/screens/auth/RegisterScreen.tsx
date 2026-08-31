@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import {
   KeyboardAvoidingView,
@@ -154,6 +154,29 @@ export default function RegisterScreen() {
                     autoCorrect={false}
                     editable={!loading}
                     error={errors.password?.message}
+                    showPasswordToggle
+                  />
+                )}
+              />
+
+              {/* CONFIRM PASSWORD */}
+
+              <Controller
+                control={control}
+                name="confirmPassword"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <AppInput
+                    label="Confirm Password"
+                    placeholder="Confirm your password"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                    error={errors.confirmPassword?.message}
+                    showPasswordToggle
                   />
                 )}
               />
