@@ -1,17 +1,17 @@
 import { injectable } from "tsyringe";
-import { apiClient } from "@/core/network/api-client";
+import { getApiClient } from "@/core/network/api-client";
 
 @injectable()
 export class AuthApi {
   async login(email: string, password: string) {
-    return apiClient.post("/v1/auth/login", {
+    return getApiClient().post("/v1/auth/login", {
       email,
       password,
     });
   }
 
   async register(name: string, email: string, password: string) {
-    return apiClient.post("/v1/auth/register", {
+    return getApiClient().post("/v1/auth/register", {
       name,
 
       email,
@@ -21,7 +21,7 @@ export class AuthApi {
   }
 
   async verifyEmail(verificationId: string, otp: string) {
-    return apiClient.post("/v1/auth/verify-email", {
+    return getApiClient().post("/v1/auth/verify-email", {
       verificationId,
 
       otp,
@@ -29,24 +29,24 @@ export class AuthApi {
   }
 
   async resendVerification(verificationId: string) {
-    return apiClient.post("/v1/auth/resend-verification", {
+    return getApiClient().post("/v1/auth/resend-verification", {
       verificationId,
     });
   }
   async forgotPassword(email: string) {
-    return apiClient.post("/v1/auth/forgot-password", {
+    return getApiClient().post("/v1/auth/forgot-password", {
       email,
     });
   }
 
   async resendForgotPassword(verificationId: string) {
-    return apiClient.post("/v1/auth/resend-forgot-password", {
+    return getApiClient().post("/v1/auth/resend-forgot-password", {
       verificationId,
     });
   }
 
   async verifyForgotPassword(verificationId: string, otp: string) {
-    return apiClient.post("/v1/auth/verify-forgot-password", {
+    return getApiClient().post("/v1/auth/verify-forgot-password", {
       verificationId,
       otp,
     });
@@ -57,7 +57,7 @@ export class AuthApi {
     newPassword: string,
     confirmPassword: string,
   ) {
-    return apiClient.post("/v1/auth/reset-password", {
+    return getApiClient().post("/v1/auth/reset-password", {
       resetToken,
       newPassword,
       confirmPassword,
@@ -65,16 +65,10 @@ export class AuthApi {
   }
 
   async getMe(accessToken: string) {
-    return apiClient.get("/v1/users/me", {
+    return getApiClient().get("/v1/users/me", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-    });
-  }
-
-  refreshToken(refreshToken: string) {
-    return apiClient.post("/v1/auth/refresh", {
-      refreshToken,
     });
   }
 }

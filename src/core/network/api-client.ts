@@ -1,26 +1,25 @@
-import axios from "axios";
+import type { AxiosInstance } from "axios";
 
-import { ENV } from "../config/env";
+import type { ITokenManager } from "@/auth/token/ITokenManager";
+import type { TokenRefreshCoordinator } from "@/auth/services/token-refresh-coordinator";
 
-import { TokenManager } from "@/auth/token/TokenManager";
+import { createApiClient } from "./api-client.factory";
 
-const tokenManager = new TokenManager();
+let apiClient: AxiosInstance | null = null;
 
-export const apiClient = axios.create({
-  baseURL: ENV.API_URL,
+export function initializeApiClient(
+  tokenManager: ITokenManager,
+  tokenRefreshCoordinator: TokenRefreshCoordinator,
+): AxiosInstance {
+  apiClient = createApiClient(tokenManager, tokenRefreshCoordinator);
 
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+  return apiClient;
+}
 
-apiClient.interceptors.request.use(async (config) => {
-  const token = await tokenManager.getAccessToken();
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+export function getApiClient(): AxiosInstance {
+  if (!apiClient) {
+    throw new Error("API client has not been initialized.");
   }
 
-  return config;
-});
+  return apiClient;
+}

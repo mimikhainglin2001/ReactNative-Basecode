@@ -1,0 +1,117 @@
+import axios, {
+  type AxiosError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from "axios";
+
+import { ENV } from "@/core/config/env";
+
+import type { ITokenManager } from "@/auth/token/ITokenManager";
+import type { TokenRefreshCoordinator } from "@/auth/services/token-refresh-coordinator";
+
+type RetryableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
+export function createApiClient(
+  tokenManager: ITokenManager,
+  tokenRefreshCoordinator: TokenRefreshCoordinator,
+): AxiosInstance {
+  const apiClient = axios.create({
+    baseURL: ENV.API_URL,
+
+    timeout: 10000,
+
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  /*
+   * Request interceptor
+   *
+   * Adds the current access token to every
+   * authenticated API request.
+   */
+  apiClient.interceptors.request.use(
+    async (config: InternalAxiosRequestConfig) => {
+      const token = await tokenManager.getAccessToken();
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      return config;
+    },
+  );
+
+  /*
+   * Response interceptor
+   *
+   * Handles:
+   *
+   * 401
+   *   ↓
+   * refresh token
+   *   ↓
+   * retry original request
+   */
+  apiClient.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+
+    async (error: AxiosError) => {
+      const originalRequest = error.config as
+        | RetryableRequestConfig
+        | undefined;
+
+      /*
+       * Only handle 401 responses.
+       */
+      if (error.response?.status !== 401 || !originalRequest) {
+        return Promise.reject(error);
+      }
+
+      /*
+       * Prevent infinite refresh loops.
+       */
+      if (originalRequest._retry) {
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      try {
+        /*
+         * TokenRefreshCoordinator guarantees
+         * that concurrent 401 responses share
+         * the same refresh request.
+         */
+        const newAccessToken = await tokenRefreshCoordinator.refresh();
+
+        /*
+         * Replace the expired access token
+         * on the original request.
+         */
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        /*
+         * Retry the original request.
+         */
+        return apiClient.request(originalRequest);
+      } catch (refreshError) {
+        /*
+         * Refresh failed.
+         *
+         * Clear invalid authentication data.
+         */
+        await tokenManager.clear();
+
+        return Promise.reject(refreshError);
+      }
+    },
+  );
+
+  return apiClient;
+}

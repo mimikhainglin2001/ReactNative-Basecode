@@ -1,28 +1,30 @@
 import * as SecureStore from "expo-secure-store";
 
-export class TokenManager {
-  private ACCESS_TOKEN = "access_token";
+import type { ITokenManager } from "./ITokenManager";
 
-  private REFRESH_TOKEN = "refresh_token";
+export class TokenManager implements ITokenManager {
+  private readonly ACCESS_TOKEN = "access_token";
 
-  private USER = "user";
+  private readonly REFRESH_TOKEN = "refresh_token";
 
-  async saveTokens(accessToken: string, refreshToken: string) {
+  private readonly USER = "user";
+
+  async saveTokens(accessToken: string, refreshToken: string): Promise<void> {
     await SecureStore.setItemAsync(this.ACCESS_TOKEN, accessToken);
 
     await SecureStore.setItemAsync(this.REFRESH_TOKEN, refreshToken);
   }
 
-  async saveUser(user: any) {
+  async saveUser(user: any): Promise<void> {
     await SecureStore.setItemAsync(this.USER, JSON.stringify(user));
   }
 
-  async getAccessToken() {
-    return await SecureStore.getItemAsync(this.ACCESS_TOKEN);
+  async getAccessToken(): Promise<string | null> {
+    return SecureStore.getItemAsync(this.ACCESS_TOKEN);
   }
 
-  async getRefreshToken() {
-    return await SecureStore.getItemAsync(this.REFRESH_TOKEN);
+  async getRefreshToken(): Promise<string | null> {
+    return SecureStore.getItemAsync(this.REFRESH_TOKEN);
   }
 
   async getUser() {
@@ -35,7 +37,7 @@ export class TokenManager {
     return JSON.parse(user);
   }
 
-  async clear() {
+  async clear(): Promise<void> {
     await SecureStore.deleteItemAsync(this.ACCESS_TOKEN);
 
     await SecureStore.deleteItemAsync(this.REFRESH_TOKEN);

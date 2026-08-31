@@ -21,21 +21,27 @@ export interface IUserRepository {
     email: string,
     password: string,
   ): Promise<Result<RegisterResult>>;
+
   verifyEmail(
     verificationId: string,
     otp: string,
     email: string,
     password: string,
   ): Promise<Result<AuthResponseEntity>>;
+
   resendVerification(verificationId: string): Promise<Result<boolean>>;
+
   forgotPassword(email: string): Promise<Result<ForgotPasswordResult>>;
+
   resendForgotPassword(
     verificationId: string,
   ): Promise<Result<ForgotPasswordResult>>;
+
   verifyForgotPassword(
     verificationId: string,
     otp: string,
   ): Promise<Result<VerifyForgotPasswordResult>>;
+
   resetPassword(
     resetToken: string,
     newPassword: string,
