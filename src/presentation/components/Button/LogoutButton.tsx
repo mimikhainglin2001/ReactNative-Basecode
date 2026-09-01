@@ -5,11 +5,11 @@ import { TouchableOpacity, Text, StyleSheet } from "react-native";
 import { AuthService } from "@/auth/services/auth.service";
 
 import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
+import container from "@/core/di/container";
 
 export default function LogoutButton() {
   const handleLogout = async () => {
-    const service = new AuthService();
-
+    const service = container.resolve<AuthService>("AuthService");
     await service.logout();
   };
 

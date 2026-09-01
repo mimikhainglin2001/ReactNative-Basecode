@@ -1,7 +1,15 @@
-import { registerUseCase } from "@/core/di/container";
+import { injectable, inject } from "tsyringe";
 
+import { RegisterUseCase } from "@/domain/usecases/register.usecase";
+
+@injectable()
 export class RegisterViewModel {
+  constructor(
+    @inject("RegisterUseCase")
+    private registerUseCase: RegisterUseCase,
+  ) {}
+
   async register(fullName: string, email: string, password: string) {
-    return registerUseCase.execute(fullName, email, password);
+    return this.registerUseCase.execute(fullName, email, password);
   }
 }

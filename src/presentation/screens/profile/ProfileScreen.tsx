@@ -11,12 +11,17 @@ import AppButton from "@/presentation/components/Button/AppButton";
 import AppMessage from "@/presentation/components/Error/AppMessage";
 import LoadingView from "@/presentation/components/Loading/LoadingView";
 
-import { profileViewModel } from "@/core/di/container";
+import container, { profileViewModel } from "@/core/di/container";
 import { AuthService } from "@/auth/services/auth.service";
 
 import { UserEntity } from "@/domain/entities/user.entity";
 
-import { Colors, Spacing, Typography, Radius } from "@/presentation/theme/theme";
+import {
+  Colors,
+  Spacing,
+  Typography,
+  Radius,
+} from "@/presentation/theme/theme";
 
 export default function ProfileScreen() {
   const [user, setUser] = useState<UserEntity | null>(null);
@@ -36,7 +41,8 @@ export default function ProfileScreen() {
       }
       setUser(result.data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load profile.";
+      const message =
+        err instanceof Error ? err.message : "Failed to load profile.";
       setError(message);
     } finally {
       setLoading(false);
@@ -48,10 +54,9 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
-      const service = new AuthService();
+      const service = container.resolve<AuthService>("AuthService");
       await service.logout();
-    } catch {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -128,10 +133,7 @@ export default function ProfileScreen() {
 
   return (
     <AppScreen style={styles.screen}>
-      <AppHeader
-        title="Profile"
-        subtitle="Manage your account settings"
-      />
+      <AppHeader title="Profile" subtitle="Manage your account settings" />
 
       {loading && (
         <View style={styles.loadingContainer}>

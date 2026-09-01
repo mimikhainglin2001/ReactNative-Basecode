@@ -1,13 +1,14 @@
 import * as SecureStore from "expo-secure-store";
 
+import type { UserEntity } from "@/domain/entities/user.entity";
 import type { ITokenManager } from "./ITokenManager";
 
 export class TokenManager implements ITokenManager {
-  private readonly ACCESS_TOKEN = "access_token";
+  private ACCESS_TOKEN = "access_token";
 
-  private readonly REFRESH_TOKEN = "refresh_token";
+  private REFRESH_TOKEN = "refresh_token";
 
-  private readonly USER = "user";
+  private USER = "user";
 
   async saveTokens(accessToken: string, refreshToken: string): Promise<void> {
     await SecureStore.setItemAsync(this.ACCESS_TOKEN, accessToken);
@@ -15,7 +16,7 @@ export class TokenManager implements ITokenManager {
     await SecureStore.setItemAsync(this.REFRESH_TOKEN, refreshToken);
   }
 
-  async saveUser(user: any): Promise<void> {
+  async saveUser(user: UserEntity): Promise<void> {
     await SecureStore.setItemAsync(this.USER, JSON.stringify(user));
   }
 
@@ -27,14 +28,14 @@ export class TokenManager implements ITokenManager {
     return SecureStore.getItemAsync(this.REFRESH_TOKEN);
   }
 
-  async getUser() {
+  async getUser(): Promise<UserEntity | null> {
     const user = await SecureStore.getItemAsync(this.USER);
 
     if (!user) {
       return null;
     }
 
-    return JSON.parse(user);
+    return JSON.parse(user) as UserEntity;
   }
 
   async clear(): Promise<void> {

@@ -3,14 +3,13 @@ import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 
 import { useAuthStore } from "@/auth/store/auth.store";
-
 import { AuthService } from "@/auth/services/auth.service";
 
 import SplashScreen from "../screens/SplashScreen";
 
 import AppNavigator from "./AppNavigator";
-
 import AuthNavigator from "./AuthNavigator";
+import { container } from "tsyringe";
 
 export default function RootNavigator() {
   const [loading, setLoading] = useState(true);
@@ -19,11 +18,15 @@ export default function RootNavigator() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const service = new AuthService();
+      try {
+        const service = container.resolve<AuthService>("AuthService");
 
-      await service.restoreSession();
-
-      setLoading(false);
+        await service.restoreSession();
+      } catch (error) {
+        console.error("RootNavigator auth restore error:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkAuth();

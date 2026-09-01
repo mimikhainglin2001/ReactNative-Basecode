@@ -26,6 +26,9 @@ import { TokenRefreshCoordinator } from "@/auth/services/token-refresh-coordinat
 import { GetCurrentUserUseCase } from "@/domain/usecases/get-current-user.usecase";
 
 import { ProfileViewModel } from "@/presentation/viewmodels/ProfileViewModel";
+import { LoginViewModel } from "@/presentation/viewmodels/LoginViewModel";
+import { RegisterViewModel } from "@/presentation/viewmodels/RegisterViewModel";
+import { AuthService } from "@/auth/services/auth.service";
 
 /*
  * API
@@ -47,6 +50,13 @@ container.register<IUserRepository>("IUserRepository", {
 
 container.register<AuthRepository>("IAuthRepository", {
   useClass: AuthRepositoryImpl,
+});
+
+/*
+ * Auth Service
+ */
+container.register("AuthService", {
+  useClass: AuthService,
 });
 
 /*
@@ -95,6 +105,15 @@ container.register("GetCurrentUserUseCase", {
   useClass: GetCurrentUserUseCase,
 });
 
+/* * ViewModels */
+container.register("LoginViewModel", {
+  useClass: LoginViewModel,
+});
+
+container.register("RegisterViewModel", {
+  useClass: RegisterViewModel,
+});
+
 container.register("ProfileViewModel", {
   useClass: ProfileViewModel,
 });
@@ -138,8 +157,7 @@ export const resetPasswordUseCase = container.resolve<ResetPasswordUseCase>(
   "ResetPasswordUseCase",
 );
 
-export const profileViewModel = container.resolve<ProfileViewModel>(
-  "ProfileViewModel",
-);
+export const profileViewModel =
+  container.resolve<ProfileViewModel>("ProfileViewModel");
 
 export default container;

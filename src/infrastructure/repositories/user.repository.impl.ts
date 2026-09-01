@@ -24,13 +24,27 @@ export class UserRepositoryImpl implements IUserRepository {
 
   async login(email: string, password: string) {
     try {
+      /*
+       * Authenticate.
+       */
       const res = await this.api.login(email, password);
 
       const { accessToken, refreshToken } = res.data;
 
-      const me = await this.api.getMe();
+      /*
+       * Immediately use the newly received
+       * access token to retrieve the user.
+       */
+      const me = await this.api.getMe(accessToken);
+
+      /*
+       * Convert API response to domain entity.
+       */
       const user = new UserEntity(me.data.id, me.data.name, me.data.email);
 
+      /*
+       * Create domain authentication response.
+       */
       const auth = new AuthResponseEntity(user, accessToken, refreshToken);
 
       return Result.ok(auth);

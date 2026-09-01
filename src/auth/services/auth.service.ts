@@ -1,21 +1,33 @@
-import { TokenManager } from "../token/TokenManager";
+import { inject, injectable } from "tsyringe";
 
+import type { ITokenManager } from "../token/ITokenManager";
 import { useAuthStore } from "../store/auth.store";
 
+@injectable()
 export class AuthService {
-  private tokenManager = new TokenManager();
+  constructor(
+    @inject("ITokenManager")
+    private readonly tokenManager: ITokenManager,
+  ) {}
 
-  async restoreSession() {
+  async restoreSession(): Promise<void> {
     const token = await this.tokenManager.getAccessToken();
 
-    if (token) {
-      const user = await this.tokenManager.getUser();
-
-      useAuthStore.getState().login(user);
+    if (!token) {
+      return;
     }
+
+    const user = await this.tokenManager.getUser();
+
+    if (!user) {
+      await this.tokenManager.clear();
+      return;
+    }
+
+    useAuthStore.getState().login(user);
   }
 
-  async logout() {
+  async logout(): Promise<void> {
     await this.tokenManager.clear();
 
     useAuthStore.getState().logout();

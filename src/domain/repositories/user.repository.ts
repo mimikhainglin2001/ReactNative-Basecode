@@ -1,4 +1,5 @@
 import { Result } from "@/core/utils/result";
+
 import { AuthResponseEntity } from "../entities/auth-response.entity";
 import { UserEntity } from "../entities/user.entity";
 
@@ -16,7 +17,11 @@ export interface VerifyForgotPasswordResult {
 }
 
 export interface IUserRepository {
-  login(email: string, password: string): Promise<Result<AuthResponseEntity>>;
+  login(
+    email: string,
+    password: string,
+  ): Promise<Result<AuthResponseEntity>>;
+
   register(
     name: string,
     email: string,
@@ -30,9 +35,13 @@ export interface IUserRepository {
     password: string,
   ): Promise<Result<AuthResponseEntity>>;
 
-  resendVerification(verificationId: string): Promise<Result<boolean>>;
+  resendVerification(
+    verificationId: string,
+  ): Promise<Result<boolean>>;
 
-  forgotPassword(email: string): Promise<Result<ForgotPasswordResult>>;
+  forgotPassword(
+    email: string,
+  ): Promise<Result<ForgotPasswordResult>>;
 
   resendForgotPassword(
     verificationId: string,

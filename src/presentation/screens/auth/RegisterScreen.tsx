@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 
 import {
   KeyboardAvoidingView,
@@ -13,6 +13,10 @@ import { useNavigation } from "@react-navigation/native";
 
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+import { Controller } from "react-hook-form";
+
+import { container } from "tsyringe";
+
 import AuthLayout from "@/presentation/layout/AuthLayout";
 
 import {
@@ -22,60 +26,162 @@ import {
   AppMessage,
 } from "@/presentation/components";
 
+import { RegisterViewModel } from "@/presentation/viewmodels/RegisterViewModel";
+
 import { AuthStackParamList } from "@/presentation/navigation/types";
 
 import { useRegisterForm } from "@/presentation/hooks/useRegisterForm";
 
 import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
-import { Controller } from "react-hook-form";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Register">;
+
+type MessageType = "success" | "error" | "warning" | "info";
+
+interface MessageState {
+  text: string;
+  type: MessageType;
+}
 
 export default function RegisterScreen() {
   const navigation = useNavigation<NavigationProp>();
 
   /*
-   * Registration form hook.
+   * Resolve ViewModel through
+   * the dependency injection container.
+   */
+  const viewModel = useMemo(
+    () => container.resolve<RegisterViewModel>("RegisterViewModel"),
+    [],
+  );
+
+  /*
+   * Form logic.
    *
-   * Handles:
+   * This hook only handles:
    *
    * - React Hook Form
    * - Zod validation
-   * - ViewModel
-   * - API request
-   * - loading
-   * - server errors
+   * - form state
+   * - form errors
    */
   const {
     control,
     handleSubmit,
     formState: { errors },
-
-    loading,
-
-    message,
-
-    messageType,
-
-    submit,
   } = useRegisterForm();
 
   /*
-   * Registration succeeded.
-   *
-   * Navigation belongs to
-   * the screen.
+   * Screen UI state.
    */
-  const handleSuccess = (
-    verificationId: string,
-    email: string,
-    password: string,
-  ) => {
-    navigation.navigate("VerifyEmail", {
-      verificationId,
-      email,
-      password,
-    });
+  const [loading, setLoading] = useState(false);
+
+  const [message, setMessage] = useState<MessageState | null>(null);
+
+  /*
+   * Registration handler.
+   *
+   * This receives validated form data.
+   */
+  const handleRegister = async (data: {
+    fullName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
+    /*
+     * Prevent double submission.
+     */
+    if (loading) {
+      return;
+    }
+
+    setLoading(true);
+
+    setMessage(null);
+
+    try {
+      /*
+       * Call ViewModel.
+       *
+       * The Screen does not call
+       * the API directly.
+       */
+      const result = await viewModel.register(
+        data.fullName,
+        data.email,
+        data.password,
+      );
+
+      /*
+       * Registration failed.
+       */
+      if (!result.success) {
+        setMessage({
+          text: result.error ?? "Registration failed.",
+          type: "error",
+        });
+
+        return;
+      }
+
+      /*
+       * Registration succeeded.
+       *
+       * Backend should return
+       * a verification ID.
+       */
+      const verificationId = result.data?.verificationId;
+
+      /*
+       * Defensive check.
+       */
+      if (!verificationId) {
+        console.error("Registration succeeded without verificationId:", result);
+
+        setMessage({
+          text: "Account was created, but email verification could not be started.",
+          type: "error",
+        });
+
+        return;
+      }
+
+      /*
+       * Navigate to email verification.
+       *
+       * Navigation belongs to
+       * the Screen.
+       */
+      navigation.navigate("VerifyEmail", {
+        verificationId,
+        email: data.email,
+        password: data.password,
+      });
+    } catch (error) {
+      /*
+       * Technical error.
+       */
+      console.error("RegisterScreen error:", error);
+
+      setMessage({
+        text: "Something went wrong. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /*
+   * Navigate to Login.
+   */
+  const handleLoginPress = () => {
+    if (loading) {
+      return;
+    }
+
+    navigation.navigate("Login");
   };
 
   return (
@@ -87,6 +193,7 @@ export default function RegisterScreen() {
         <ScrollView
           contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
             {/* HEADER */}
@@ -186,7 +293,7 @@ export default function RegisterScreen() {
               <View style={styles.buttonWrapper}>
                 <AppButton
                   title="Create Account"
-                  onPress={handleSubmit(() => submit(handleSuccess))}
+                  onPress={handleSubmit(handleRegister)}
                   loading={loading}
                   disabled={loading}
                 />
@@ -195,7 +302,7 @@ export default function RegisterScreen() {
               {/* SERVER MESSAGE */}
 
               {message ? (
-                <AppMessage message={message} type={messageType} />
+                <AppMessage message={message.text} type={message.type} />
               ) : null}
             </View>
 
@@ -203,14 +310,7 @@ export default function RegisterScreen() {
 
             <Text style={styles.linkText}>
               Already have an account?{" "}
-              <Text
-                style={styles.link}
-                onPress={() => {
-                  if (!loading) {
-                    navigation.navigate("Login");
-                  }
-                }}
-              >
+              <Text style={styles.link} onPress={handleLoginPress}>
                 Login
               </Text>
             </Text>

@@ -9,6 +9,8 @@ import { ENV } from "@/core/config/env";
 import type { ITokenManager } from "@/auth/token/ITokenManager";
 import type { TokenRefreshCoordinator } from "@/auth/services/token-refresh-coordinator";
 
+import { useAuthStore } from "@/auth/store/auth.store";
+
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
@@ -104,9 +106,11 @@ export function createApiClient(
         /*
          * Refresh failed.
          *
-         * Clear invalid authentication data.
+         * Clear invalid authentication data
+         * and log out the user.
          */
         await tokenManager.clear();
+        useAuthStore.getState().logout();
 
         return Promise.reject(refreshError);
       }

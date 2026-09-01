@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 
 import {
   KeyboardAvoidingView,
@@ -31,6 +31,7 @@ import { AuthStackParamList } from "@/presentation/navigation/types";
 import { useLoginForm } from "@/presentation/hooks/useLoginForm";
 
 import { Colors, Spacing, Typography } from "@/presentation/theme/theme";
+import container from "@/core/di/container";
 
 type NavigationProp = NativeStackNavigationProp<AuthStackParamList, "Login">;
 
@@ -47,8 +48,7 @@ export default function LoginScreen() {
   /*
    * Create ViewModel once.
    */
-  const viewModel = useMemo(() => new LoginViewModel(), []);
-
+  const viewModel = container.resolve<LoginViewModel>("LoginViewModel");
   /*
    * Form logic lives inside the hook.
    */

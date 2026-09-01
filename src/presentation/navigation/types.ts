@@ -1,3 +1,4 @@
+// Describe navigation routes and their parameters.
 export type AuthStackParamList = {
   Login: undefined;
 

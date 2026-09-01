@@ -1,38 +1,75 @@
-import { loginUseCase } from "@/core/di/container";
+import { inject, injectable } from "tsyringe";
+
+import type { Result } from "@/core/utils/result";
+
+import { UserEntity } from "@/domain/entities/user.entity";
+import { LoginUseCase } from "@/domain/usecases/login.usecase";
+
+import type { ITokenManager } from "@/auth/token/ITokenManager";
 
 import { useAuthStore } from "@/auth/store/auth.store";
 
-import { TokenManager } from "@/auth/token/TokenManager";
-
-import { Result } from "@/core/utils/result";
-
-import { UserEntity } from "@/domain/entities/user.entity";
-
-const tokenManager = new TokenManager();
-
+@injectable()
 export class LoginViewModel {
-  async login(
-    email: string,
-    password: string,
-  ): Promise<Result<UserEntity>> {
-    const result = await loginUseCase.execute(email, password);
+  constructor(
+    @inject("LoginUseCase")
+    private loginUseCase: LoginUseCase,
 
+    @inject("ITokenManager")
+    private tokenManager: ITokenManager,
+  ) {}
+
+  async login(email: string, password: string): Promise<Result<UserEntity>> {
+    /*
+     * 1. Ask the LoginUseCase to authenticate
+     *    the user.
+     */
+    const result = await this.loginUseCase.execute(email, password);
+
+    /*
+     * 2. Stop if authentication failed.
+     */
     if (!result.success) {
-      return Result.fail(result.error ?? "Unable to sign in.");
+      return {
+        success: false,
+        error: result.error ?? "Unable to sign in.",
+      };
     }
 
+    /*
+     * 3. Make sure authentication data exists.
+     */
     const auth = result.data;
 
     if (!auth) {
-      return Result.fail("Invalid authentication response.");
+      return {
+        success: false,
+        error: "Invalid authentication response.",
+      };
     }
 
-    await tokenManager.saveTokens(auth.accessToken, auth.refreshToken);
+    /*
+     * 4. Save access token and refresh token.
+     */
+    await this.tokenManager.saveTokens(auth.accessToken, auth.refreshToken);
 
-    await tokenManager.saveUser(auth.user);
+    /*
+     * 5. Save the authenticated user.
+     */
+    await this.tokenManager.saveUser(auth.user);
 
+    /*
+     * 6. Update global authentication state.
+     */
     useAuthStore.getState().login(auth.user);
 
-    return Result.ok(auth.user);
+    /*
+     * 7. Return the authenticated user
+     *    to the LoginScreen.
+     */
+    return {
+      success: true,
+      data: auth.user,
+    };
   }
 }

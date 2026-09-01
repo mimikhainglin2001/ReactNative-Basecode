@@ -64,7 +64,13 @@ export class AuthApi {
     });
   }
 
-  async getMe() {
-    return getApiClient().get("/v1/users/me");
+  async getMe(accessToken?: string) {
+    return getApiClient().get("/v1/users/me", {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
+    });
   }
 }
