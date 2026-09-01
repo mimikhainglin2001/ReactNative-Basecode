@@ -29,7 +29,24 @@ export class UserRepositoryImpl implements IUserRepository {
        */
       const res = await this.api.login(email, password);
 
-      const { accessToken, refreshToken } = res.data;
+      const data = res.data;
+
+      /*
+       * A new/untrusted device makes the backend
+       * request login OTP verification. That
+       * response carries no tokens, so returning
+       * a "successful" session here would later
+       * produce a "No refresh token available"
+       * error when the client tries to refresh.
+       */
+      if (data.requiresVerification || !data.accessToken || !data.refreshToken) {
+        return Result.fail<AuthResponseEntity>(
+          data.message ??
+            "New device detected. A verification code has been sent to your email.",
+        );
+      }
+
+      const { accessToken, refreshToken } = data;
 
       /*
        * Immediately use the newly received
@@ -57,7 +74,9 @@ export class UserRepositoryImpl implements IUserRepository {
     try {
       const res = await this.api.register(name, email, password);
 
-      return Result.ok({ verificationId: res.data.verificationId });
+      return Result.ok({
+        verificationId: res.data.verificationId,
+      } as RegisterResult);
     } catch (error) {
       return Result.fail<RegisterResult>(getApiError(error));
     }
@@ -93,7 +112,7 @@ export class UserRepositoryImpl implements IUserRepository {
       const res = await this.api.forgotPassword(email);
 
       return Result.ok({
-        verificationId: res.data.data.verificationId,
+        verificationId: res.data.verificationId,
       } as ForgotPasswordResult);
     } catch (error) {
       return Result.fail<ForgotPasswordResult>(getApiError(error));
@@ -105,7 +124,7 @@ export class UserRepositoryImpl implements IUserRepository {
       const res = await this.api.resendForgotPassword(verificationId);
 
       return Result.ok({
-        verificationId: res.data.data.verificationId,
+        verificationId: res.data.verificationId,
       } as ForgotPasswordResult);
     } catch (error) {
       return Result.fail<ForgotPasswordResult>(getApiError(error));
@@ -117,8 +136,8 @@ export class UserRepositoryImpl implements IUserRepository {
       const res = await this.api.verifyForgotPassword(verificationId, otp);
 
       return Result.ok({
-        resetToken: res.data.data.resetToken,
-        expiresAt: res.data.data.expiresAt,
+        resetToken: res.data.resetToken,
+        expiresAt: res.data.expiresAt,
       } as VerifyForgotPasswordResult);
     } catch (error) {
       return Result.fail<VerifyForgotPasswordResult>(getApiError(error));

@@ -1,23 +1,40 @@
-import { Colors, Spacing, Typography, Radius } from "@/presentation/theme/theme";
 import React, { ReactNode } from "react";
 
 import {
-  TouchableOpacity,
-  Text,
+  ActivityIndicator,
+  Pressable,
+  StyleProp,
   StyleSheet,
+  Text,
   View,
+  ViewStyle,
 } from "react-native";
 
-interface Props {
+import {
+  Colors,
+  Radius,
+  Spacing,
+  Typography,
+} from "@/presentation/theme/theme";
+
+interface AppButtonProps {
   title?: string;
   children?: ReactNode;
+
   onPress: () => void;
+
   loading?: boolean;
   disabled?: boolean;
+
   variant?: "primary" | "outline" | "ghost" | "destructive";
+
   fullWidth?: boolean;
+
   align?: "left" | "center" | "right";
-  style?: any;
+
+  style?: StyleProp<ViewStyle>;
+
+  accessibilityLabel?: string;
 }
 
 export default function AppButton({
@@ -30,96 +47,183 @@ export default function AppButton({
   fullWidth = false,
   align = "center",
   style,
-}: Props) {
+  accessibilityLabel,
+}: AppButtonProps) {
+  /*
+   * A loading button should also
+   * behave as a disabled button.
+   */
+  const isDisabled = disabled || loading;
+
+  /*
+   * Variant flags.
+   */
   const isOutline = variant === "outline";
   const isGhost = variant === "ghost";
   const isDestructive = variant === "destructive";
 
-  const backgroundColor = isGhost
-    ? "transparent"
-    : isOutline
-    ? "transparent"
-    : isDestructive
-    ? Colors.error
-    : Colors.primary;
+  /*
+   * Background color.
+   */
+  const backgroundColor =
+    isGhost || isOutline
+      ? "transparent"
+      : isDestructive
+        ? Colors.error
+        : Colors.primary;
 
+  /*
+   * Border color.
+   */
   const borderColor = isOutline
     ? Colors.primary
     : isDestructive
-    ? Colors.error
-    : "transparent";
+      ? Colors.error
+      : "transparent";
 
+  /*
+   * Text color.
+   */
   const textColor = isGhost
     ? Colors.text
     : isOutline
-    ? Colors.primary
-    : isDestructive
-    ? Colors.white
-    : Colors.white;
+      ? Colors.primary
+      : Colors.white;
+
+  /*
+   * Alignment.
+   */
+  const alignmentStyle =
+    align === "left"
+      ? styles.alignLeft
+      : align === "right"
+        ? styles.alignRight
+        : styles.alignCenter;
 
   return (
-    <TouchableOpacity
-      style={[
+    <Pressable
+      style={({ pressed }) => [
         styles.container,
         fullWidth && styles.fullWidth,
-        align !== "center" && styles[align as keyof typeof styles],
-        { backgroundColor, borderColor },
-        disabled && styles.disabled,
+        alignmentStyle,
+        {
+          backgroundColor,
+          borderColor,
+        },
+        isDisabled && styles.disabled,
+        pressed && !isDisabled && styles.pressed,
         style,
       ]}
       onPress={onPress}
-      disabled={disabled}
-      activeOpacity={0.8}
+      disabled={isDisabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityState={{
+        disabled: isDisabled,
+        busy: loading,
+      }}
     >
-      {children ? (
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={textColor} />
+
+          {title ? (
+            <Text
+              style={[
+                styles.text,
+                {
+                  color: textColor,
+                },
+              ]}
+            >
+              {title}
+            </Text>
+          ) : null}
+        </View>
+      ) : children ? (
         <View style={styles.childrenContainer}>{children}</View>
       ) : (
         <Text
           style={[
             styles.text,
-            { color: textColor },
+            {
+              color: textColor,
+            },
             isGhost && styles.ghostText,
           ]}
         >
-          {loading ? "Loading..." : title}
+          {title}
         </Text>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: Spacing.md,
+    minHeight: 48,
+
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+
     borderRadius: Radius.md,
     borderWidth: 1,
+
+    flexDirection: "row",
+
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: "row",
-    minHeight: 48,
   },
+
   fullWidth: {
     width: "100%",
   },
-  left: {
-    alignItems: "flex-start",
+
+  alignLeft: {
+    justifyContent: "flex-start",
   },
-  right: {
-    alignItems: "flex-end",
+
+  alignCenter: {
+    justifyContent: "center",
   },
+
+  alignRight: {
+    justifyContent: "flex-end",
+  },
+
   disabled: {
     opacity: 0.5,
   },
-  childrenContainer: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+
+  pressed: {
+    opacity: 0.8,
   },
+
+  loadingContainer: {
+    flexDirection: "row",
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    gap: Spacing.sm,
+  },
+
+  childrenContainer: {
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    justifyContent: "space-between",
+
+    flex: 1,
+  },
+
   text: {
     fontSize: Typography.body.fontSize,
+
     fontWeight: "600",
   },
+
   ghostText: {
     fontWeight: "500",
   },

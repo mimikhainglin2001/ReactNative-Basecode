@@ -37,6 +37,15 @@ export function createApiClient(
    */
   apiClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
+      /*
+       * Don't override an explicitly-provided token (e.g. a freshly
+       * returned token used by getMe during login). Only fall back to
+       * the stored token when the caller didn't supply one.
+       */
+      if (config.headers.Authorization) {
+        return config;
+      }
+
       const token = await tokenManager.getAccessToken();
 
       if (token) {
@@ -60,6 +69,19 @@ export function createApiClient(
    */
   apiClient.interceptors.response.use(
     (response) => {
+      /*
+       * The backend wraps every successful response
+       * in an envelope `{ data, meta }`. Unwrap it so
+       * callers read the payload directly (`res.data`).
+       */
+      if (
+        response.data &&
+        typeof response.data === "object" &&
+        "data" in response.data
+      ) {
+        response.data = response.data.data;
+      }
+
       return response;
     },
 

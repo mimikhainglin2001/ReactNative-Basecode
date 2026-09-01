@@ -11,6 +11,10 @@ export class TokenManager implements ITokenManager {
   private USER = "user";
 
   async saveTokens(accessToken: string, refreshToken: string): Promise<void> {
+    if (!accessToken || !refreshToken) {
+      throw new Error("Cannot save empty tokens");
+    }
+
     await SecureStore.setItemAsync(this.ACCESS_TOKEN, accessToken);
 
     await SecureStore.setItemAsync(this.REFRESH_TOKEN, refreshToken);
@@ -21,11 +25,15 @@ export class TokenManager implements ITokenManager {
   }
 
   async getAccessToken(): Promise<string | null> {
-    return SecureStore.getItemAsync(this.ACCESS_TOKEN);
+    const token = await SecureStore.getItemAsync(this.ACCESS_TOKEN);
+
+    return token && token !== "undefined" ? token : null;
   }
 
   async getRefreshToken(): Promise<string | null> {
-    return SecureStore.getItemAsync(this.REFRESH_TOKEN);
+    const token = await SecureStore.getItemAsync(this.REFRESH_TOKEN);
+
+    return token && token !== "undefined" ? token : null;
   }
 
   async getUser(): Promise<UserEntity | null> {
